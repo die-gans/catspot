@@ -7,10 +7,10 @@ Live project status. Update this file whenever work is completed, blocked, or sc
 ## Project Metadata
 
 - **Name:** Catspot (working title)
-- **Repo:** https://github.com/dan-munoz/catspot *(pending GitHub auth)*
+- **Repo:** https://github.com/die-gans/catspot ✅
 - **Live URL:** None yet
 - **Start Date:** 2026-07-29
-- **Current Phase:** Phase 0 — Repo setup & planning
+- **Current Phase:** Phase 0 — Repo setup & planning ✅
 - **Next Decision Gate:** Prove scan pipeline technical feasibility in a 4-week spike
 
 ---
@@ -38,12 +38,12 @@ See `docs/PRD.md` for full technical blueprint.
 - [x] PRD + North Star document
 - [x] Consolidated PRD written
 - [x] Local Git repo initialized with README, PRD, ROADMAP, AGENTS, PROJECT_TRACKER, and research docs
+- [x] GitHub repo created and pushed: https://github.com/die-gans/catspot
 
 ---
 
 ## 🔄 In Progress
 
-- [ ] GitHub repo creation and push *(blocked: existing `gh` auth token is invalid)*
 - [ ] Project name finalization (Catspot is a placeholder)
 - [ ] Technical spike scoping for scan pipeline
 
@@ -51,7 +51,6 @@ See `docs/PRD.md` for full technical blueprint.
 
 ## 📋 Planned (Next 90 Days)
 
-- [ ] GitHub repo live and agent-friendly
 - [ ] 4-week technical spike: on-device detection + vision-LLM verification + manual fallback on real cats
 - [ ] Spike gate decision: proceed to MVP if first-scan success ≥80%
 - [ ] Phase 1 MVP foundations: repo/CI, EAS dev builds, Clerk/Convex auth, schema v1, R2 upload
@@ -63,9 +62,7 @@ See `docs/PRD.md` for full technical blueprint.
 
 ## 🚧 Blockers
 
-| Blocker | Owner | Resolution Path |
-|---|---|---|
-| GitHub auth token invalid | Dan | Provide new GitHub personal access token or run `gh auth login` on the machine |
+None.
 
 ---
 

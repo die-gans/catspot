@@ -107,7 +107,7 @@ When in doubt, consult in this order:
 
 ```bash
 # Clone
-git clone https://github.com/dan-munoz/catspot.git
+git clone https://github.com/die-gans/catspot.git
 cd catspot
 
 # App (future)

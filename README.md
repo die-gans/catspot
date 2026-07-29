@@ -28,7 +28,7 @@ Point your phone at a real cat, verify the sighting, and turn it into a collecti
 ## 🚀 Quick Start (For Future Development)
 
 ```bash
-git clone https://github.com/dan-munoz/catspot.git
+git clone https://github.com/die-gans/catspot.git
 cd catspot
 # MVP stack will be Expo + React Native + Convex — setup instructions added when code lands.
 ```
