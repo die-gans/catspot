@@ -53,7 +53,7 @@ See `docs/PRD.md` for full technical blueprint.
 - [x] Pre-flight: install Flutter SDK (via FVM) — 2026-07-29 (FVM 4.1.2, Flutter 3.44.8, Dart 3.12.2; repo pinned via .fvmrc)
 - [ ] Pre-flight: role smoke tests for worker profiles
 - [ ] Project name finalization (Catspot is a placeholder)
-- [ ] **Sprint 1 STARTED 2026-07-29:** ✅ design system v1 (PR #1), ✅ scaffold S1.1 (PR #2). In flight: S1.4 theme tokens (DSN) + S1.2 CI (INF)
+- [ ] **Sprint 1 STARTED 2026-07-29:** ✅ design system v1 (PR #1), ✅ scaffold S1.1 (PR #2), ✅ CI S1.2 (PR #3, green on main), ✅ S1.4 theme tokens (PR #4, CI-gated). Next: V1–V4 validation checklist (Convex/Clerk/camera/MLKit), BE schema v1 + auth
 
 ---
 
