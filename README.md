@@ -1,5 +1,7 @@
 # Catspot
 
+![CI](https://github.com/die-gans/catspot/actions/workflows/ci.yml/badge.svg)
+
 A real-world cat spotting and collection game — the competent version of the CatchCat concept.
 
 > **Status:** Research & planning phase. No live build yet.  
