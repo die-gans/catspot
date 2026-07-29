@@ -12,7 +12,8 @@ A real-world cat spotting and collection game — the competent version of the C
 | Document | Purpose |
 |---|---|
 | [`docs/PRD.md`](docs/PRD.md) | Full product requirements, competitive teardown, technical blueprint, and North Star. |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phased build plan, milestones, and decision gates. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | High-level phased build plan and decision gates. |
+| [`docs/planning/`](docs/planning/) | **Implementation plans:** stack/scaffold, sprint/orchestration, and detection spike. |
 | [`docs/PROJECT_TRACKER.md`](docs/PROJECT_TRACKER.md) | Live status of what’s done, in progress, and blocked. |
 | [`docs/AGENTS.md`](docs/AGENTS.md) | How AI agents (and future you) should work in this repo. |
 | [`docs/research/`](docs/research/) | Raw intel, competitive analysis, and subagent outputs from the initial teardown. |

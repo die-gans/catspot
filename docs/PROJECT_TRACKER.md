@@ -37,26 +37,27 @@ See `docs/PRD.md` for full technical blueprint.
 - [x] Technical architecture + build blueprint
 - [x] PRD + North Star document
 - [x] Consolidated PRD written
-- [x] Local Git repo initialized with README, PRD, ROADMAP, AGENTS, PROJECT_TRACKER, and research docs
 - [x] GitHub repo created and pushed: https://github.com/die-gans/catspot
+- [x] K3 swarm planning outputs:
+  - [x] MVP tech stack + repo scaffold plan (`docs/planning/01-mvp-stack-and-scaffold.md`)
+  - [x] MVP implementation roadmap + agent orchestration plan (`docs/planning/02-mvp-implementation-orchestration.md`)
+  - [x] 4-week detection/AI spike plan (`docs/planning/03-detection-spike-plan.md`)
 
 ---
 
 ## 🔄 In Progress
 
+- [ ] Pre-flight: confirm agent profiles or single-profile fallback
 - [ ] Project name finalization (Catspot is a placeholder)
-- [ ] Technical spike scoping for scan pipeline
 
 ---
 
 ## 📋 Planned (Next 90 Days)
 
-- [ ] 4-week technical spike: on-device detection + vision-LLM verification + manual fallback on real cats
-- [ ] Spike gate decision: proceed to MVP if first-scan success ≥80%
-- [ ] Phase 1 MVP foundations: repo/CI, EAS dev builds, Clerk/Convex auth, schema v1, R2 upload
-- [ ] Phase 2: core scan loop (camera, capture, async pipeline, keepsake card, album)
-- [ ] Phase 3: collection management, economy, friends, moderation
-- [ ] Phase 4: map, iOS TestFlight, Play Store launch readiness
+- [ ] Sprint 1 (Wk 1–2): monorepo scaffold, CI, EAS dev builds, Clerk/Convex auth, schema v1, R2 upload
+- [ ] Sprint 2 (Wk 3–4): detection/AI spike — server verification, embeddings, cutouts → GO/NO-GO gate G1
+- [ ] Sprints 3–8: core scan loop, collection management, economy/social, map, launch readiness
+- [ ] Gates G2 (beta), G3 (economy/anti-cheat), G4 (ship)
 
 ---
 
