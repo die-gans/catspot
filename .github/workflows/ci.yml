@@ -55,7 +55,6 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: packages/backend/pnpm-lock.yaml
 
       - name: Install backend dependencies
         run: pnpm install
