@@ -23,15 +23,23 @@ catspot/
 │   ├── ROADMAP.md              # Phased build plan and decision gates
 │   ├── PROJECT_TRACKER.md      # Live status of work
 │   ├── AGENTS.md               # This file
+│   ├── planning/               # Sprint-level implementation plans
+│   │   ├── 01-mvp-stack-and-scaffold.md
+│   │   ├── 02-mvp-implementation-orchestration.md
+│   │   ├── 03-detection-spike-plan.md
+│   │   └── 04-hermes-profiles.md
 │   └── research/               # Raw intel, competitive teardown, blueprints
 │       ├── raw-intel.md
 │       ├── 01-product-teardown.md
 │       ├── 02-technical-blueprint.md
 │       ├── 03-prd-north-star.md
 │       └── CatchCat-Competitive-Analysis-PRD.md
-├── app/                        # Expo + React Native app (future)
-├── convex/                     # Convex backend functions and schema (future)
-├── scripts/                    # Automation, seeding, one-off scripts (future)
+├── apps/
+│   └── mobile/                 # Flutter client (iOS, Android, web smoke target)
+├── packages/
+│   ├── backend/                # Convex backend functions and schema (TypeScript)
+│   └── shared/                 # Dart package + JSON-schema contract types
+├── scripts/                    # Automation, seeding, one-off scripts, eval harnesses
 ├── .cursorrules / .claude.md   # Coding style rules (future)
 └── .gitignore
 ```
@@ -54,20 +62,23 @@ When in doubt, consult in this order:
 
 | Layer | Choice |
 |---|---|
-| Mobile app | Expo SDK 52+ (React Native) |
-| Camera | `react-native-vision-camera` v4 + frame processors |
-| On-device ML | MLKit Object Detection (MVP) → custom TFLite YOLOv8n/EfficientDet-Lite0 |
+| Mobile app | Flutter stable (Dart 3) — iOS + Android + web smoke target |
+| State management | Riverpod (UI state); Convex client (server state) |
+| Navigation | `go_router` |
+| Camera | `camera` plugin (native); web = manual capture only |
+| On-device ML | `google_mlkit_object_detection` (MVP) → custom TFLite via `tflite_flutter` (Phase 2) |
 | Backend | Convex (real-time sync, TypeScript functions) |
 | Image storage | Cloudflare R2 + CDN |
 | Image processing | Replicate (silhouette/cutout) + Cloudflare Workers (thumbnails) |
-| Server vision | OpenAI GPT-4.1-mini / GPT-4o-mini vision |
+| Server vision | OpenAI `gpt-4o-mini` / GPT-4.1-mini vision |
 | Embeddings | OpenCLIP / MobileCLIP pet-fine-tuned (512-d) |
-| Auth | Clerk (Expo + Convex) |
-| IAP/ads | RevenueCat + AdMob |
-| Push | Expo Push / FCM + OneSignal |
-| Analytics | PostHog + Sentry |
-| Maps | `react-native-maps` (Apple Maps iOS, Google Maps Android) |
-| Web landing | Next.js on Vercel |
+| Auth | Clerk (`clerk_flutter` beta) + Convex JWT |
+| IAP/ads | `purchases_flutter` (RevenueCat) + `google_mobile_ads` |
+| Push | `firebase_messaging` + `flutter_local_notifications` (Phase 3+) |
+| Analytics | PostHog + Sentry (`posthog_flutter`, `sentry_flutter`) |
+| Maps | `google_maps_flutter` / `flutter_map` (Phase 6+) |
+| Web landing | Flutter web smoke target; separate landing page deferred |
+| CI/Builds | GitHub Actions + Codemagic + Fastlane fallback |
 
 **Do not swap the stack without updating the PRD and explaining the trade-off.**
 
@@ -75,11 +86,12 @@ When in doubt, consult in this order:
 
 ## 5. Coding Conventions (To Be Filled as Code Lands)
 
-- TypeScript everywhere.
-- Convex functions live in `convex/` and are the only source of truth for auth, economy, rarity, and verification.
-- Client detection is UX only — never authoritative for verification or rewards.
+- Client: Dart with strict analysis (`analysis_options.yaml`). Backend: TypeScript with `strict`.
+- Convex functions live in `packages/backend/convex/` and are the only source of truth for auth, economy, rarity, and verification.
+- Flutter client is never authoritative for detection, rewards, or rarity rolls.
 - All currency/item grants go through an append-only `economyLedger` with idempotency keys.
 - Privacy-first: no background location, no facial data, coarsen public map coordinates, strip EXIF before upload.
+- Cross-language contracts (VisionVerdict, rarity tiers, scan status) are authored as JSON Schema in `packages/shared/schema/`, then generated into TS and Dart via `scripts/gen_shared_types.sh`.
 
 ---
 
@@ -110,13 +122,14 @@ When in doubt, consult in this order:
 git clone https://github.com/die-gans/catspot.git
 cd catspot
 
-# App (future)
-cd app
-npm install
-npx expo start
+# Flutter client (future)
+cd apps/mobile
+flutter pub get
+flutter run -d <device>
 
-# Convex (future)
-cd convex
+# Backend (future)
+cd packages/backend
+pnpm install
 npx convex dev
 ```
 

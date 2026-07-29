@@ -51,7 +51,7 @@ All metrics measured on the **held-out field test set** (§4.3), not training da
 We test exactly the pipeline from Blueprint §3/§5, in throwaway form:
 
 ```
-[Expo test app: vision-camera + frame processor]
+[Flutter test app: camera plugin + google_mlkit_object_detection / tflite_flutter]
    on-device detect (MLKit baseline AND custom TFLite candidate)
    → capture JPEG + bbox + device meta
         │
@@ -110,14 +110,13 @@ Recruitment: post in local cat-owner groups + team networks. Incentive: $20 coff
 
 ### Track A — On-device detector (Weeks 1–3)
 
-**Baseline (must work Day 1):** MLKit Object Detection, stream mode, via `react-native-vision-camera` v4 frame processor (`vision-camera-mlkit` or custom frame-processor plugin).
+**Baseline (must work Day 1):** MLKit Object Detection, stream mode, via the Flutter `camera` plugin image stream + `google_mlkit_object_detection` (with `google_mlkit_commons` for `InputImage.fromBytes` conversion).
 - MLKit's generic detector has **no cat class** — test whether bbox + "any object, animal-ish size/aspect" heuristics suffice as a gate, or whether we need the custom model immediately. **This is a key open question the spike must answer.**
 
-**Custom candidate:** **YOLOv8n** (Ultralytics) single-class `cat`, fine-tuned on §4.1 training pool + hard negatives.
-- Train: `yolo train model=yolov8n.pt data=cat.yaml imgsz=320 epochs=100` (320px keeps on-device latency viable)
+**Candidate 2 — Custom YOLOv8n cat detector (TFLite):**
+- Train/fine-tune on public cat datasets (Oxford-IIIT, parts of COCO, plus collected negatives).
 - Export: `yolo export model=best.pt format=tflite int8` (INT8 quantization for NNAPI/GPU delegate)
-- Fallback candidate if YOLOv8n export is painful: **EfficientDet-Lite0** via TensorFlow Model Maker (officially supported TFLite path).
-- Runtime: TFLite in the frame processor with GPU delegate (Android NNAPI; iOS Core ML delegate), 320×320 input, score threshold swept 0.25–0.5.
+- Runtime: `tflite_flutter` with GPU delegates (Android NNAPI / iOS Core ML / GPU), 320×320 input, score threshold swept 0.25–0.5.
 - **Targets:** ≥15fps sustained on Pixel 4a-class hardware; recall per G1 on the field set; report precision too (false boxes on dogs/plush matter for UX trust).
 
 **Liveness heuristics on-device (light version for spike):** ≥5 consecutive detected frames with bbox micro-jitter (parallax/motion) before enabling the capture button; basic moiré check (FFT high-frequency spike on the crop) flagged into device meta. Don't over-build — server layer is the authority.
@@ -160,8 +159,8 @@ Recruitment: post in local cat-owner groups + team networks. Incentive: $20 coff
 ### Week 1 — Data & harness foundation
 - Finalize dataset download scripts; assemble training pool + hard negatives (§4.1)
 - Recruit field volunteers; distribute capture instructions + consent; begin captures
-- Build Expo test app skeleton: vision-camera preview, capture, upload to ingest endpoint
-- MLKit baseline running in frame processor; instrument fps/latency
+- Build **Flutter** test app skeleton: camera preview, capture, upload to ingest endpoint (web + mobile targets)
+- MLKit baseline running with the `camera` plugin image stream; instrument fps/latency
 - Eval harness v0 (runs a folder of labeled images → metrics table)
 - **Checkpoint Fri:** harness runs end-to-end on public data; ≥150 field captures in hand
 

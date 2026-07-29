@@ -32,7 +32,7 @@ Phased build plan and decision gates. This is the execution companion to `docs/P
 **Goal:** Prove we can reliably detect, verify, and turn real-world cat photos into collectible cards.
 
 ### Week 1: Detection Baseline
-- [ ] Set up Expo + `react-native-vision-camera` + MLKit object detection on Android and iOS test devices.
+- [ ] Set up Flutter + `camera` plugin + `google_mlkit_object_detection` on Android and iOS test devices; validate web smoke capture only.
 - [ ] Build a simple capture flow: live preview → detection feedback → capture → upload to backend.
 - [ ] Collect 200+ real-world cat photos across distances, lighting, breeds, and poses for a test set.
 
@@ -66,8 +66,8 @@ Phased build plan and decision gates. This is the execution companion to `docs/P
 
 **Goal:** Build the app shell, backend, and auth so the core loop can be iterated quickly.
 
-- [ ] Repo structure: `app/` (Expo), `convex/` (backend), `scripts/`, `.cursorrules`.
-- [ ] CI: EAS build pipeline, lint, typecheck.
+- [ ] Repo structure: `apps/mobile/` (Flutter), `packages/backend/` (Convex), `packages/shared/`, `scripts/`, `.cursorrules` / `.claude.md`.
+- [ ] CI: Codemagic/Fastlane build pipeline, Flutter analyze/test, backend lint/typecheck.
 - [ ] Clerk/Convex auth: Google, Apple, email-code.
 - [ ] Convex schema v1: `users`, `keepsakes`, `scans`, `sightings`, `vectors`, `economyLedger`, `friendships`, `reports`.
 - [ ] R2 upload pipeline: original → compressed card → thumbnail → cutout.

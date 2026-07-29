@@ -40,7 +40,7 @@ CatchCat is a real-world cat-spotting collection game — "Pokémon GO for cats.
 - **Downloads:** 100K+ (Google Play).
 - **Rating:** 3.0★ (~2.55K reviews).
 - **Developer:** Sebastian Seidel, solo indie, Germany.
-- **Inferred stack:** Expo + React Native, Convex, Cloudflare R2, OpenAI/Replicate, RevenueCat, AdMob, FCM/OneSignal, PostHog, Sentry.
+- **Inferred stack:** Flutter + Dart, Convex, Cloudflare R2, OpenAI/Replicate, RevenueCat (`purchases_flutter`), AdMob (`google_mobile_ads`), FCM, PostHog, Sentry.
 
 ---
 
@@ -161,30 +161,34 @@ CatchCat's model is **ads + IAP + subscription + hinted Web3**. The problem is t
 
 | Layer | Choice | Why |
 |---|---|---|
-| Mobile framework | **Expo SDK 52+ (React Native)** | Single iOS+Android codebase, OTA updates, excellent camera/ML ecosystem. Matches the incumbent's stack but executed properly. |
-| Camera | **react-native-vision-camera v4** + frame processors | Real-time frame processing, lens selection, zoom, torch — directly fixes the #2 complaint. |
-| On-device ML | **Google MLKit object detection** (MVP) → custom **TFLite YOLOv8n/EfficientDet-Lite0** | MLKit ships day one; custom model fine-tuned on cats closes the accuracy gap. |
+| Mobile framework | **Flutter stable (Dart 3)** | Single iOS+Android+web codebase from one language; fast native performance; strong widget test/debug velocity; web build lets us design and test in the browser without shipping web. |
+| State management | **Riverpod** (UI) + **Convex** (server) | Simple UI state; real-time backend state stays authoritative. |
+| Navigation | **go_router** | Deep-linking, web smoke routing, declarative URL structure. |
+| Camera | **Flutter `camera` plugin** (native) + manual capture on web | Live image streams on native; web preview/capture only. Lens/zoom/focus supported where hardware allows. |
+| On-device ML | **Google MLKit object detection** (MVP) → custom **TFLite via `tflite_flutter`** | MLKit ships day one; custom model fine-tuned on cats closes the accuracy gap. |
 | Backend | **Convex** | Real-time sync, TypeScript end-to-end, scheduled jobs, scales from 0. Strong for social/map features. |
+| Convex client (Flutter) | **`convex_flutter` / `convex_dart`** (community; validated in Sprint 1) or thin wrapper over Convex HTTP endpoints | No official SDK; validated first, swapped if needed. |
+| Auth | **Clerk** via `clerk_flutter` (beta) + Convex JWT template | Google/Apple/email-code out of the box; JWT token bridge to Convex. |
 | Image storage | **Cloudflare R2** + CDN | Zero egress fees, cheap at image-heavy scale. |
 | Image processing | **Replicate** (silhouette/rembg) + **Cloudflare Workers** (thumbnails) | On-demand GPU without managing infra. |
 | Server vision | **OpenAI GPT-4.1-mini / GPT-4o-mini vision** | Cheap verification of "real cat vs. screen/print/plush." |
 | Embeddings | **OpenCLIP/MobileCLIP pet-fine-tuned** | 512-d vectors for duplicate detection of the same physical cat. |
-| Auth | **Clerk** (Expo + Convex integration) | Google/Apple/email-code out of the box. |
-| IAP/ads | **RevenueCat** + **AdMob** | Industry standard; handles receipt validation and SSV ad rewards. |
-| Push | **Expo Push / FCM + OneSignal** | Segmentation for rare-find alerts, streak reminders. |
+| IAP/ads | **RevenueCat** (`purchases_flutter`) + **AdMob** (`google_mobile_ads`) | Industry standard; handles receipt validation and SSV ad rewards. |
+| Push | **Firebase Cloud Messaging** + **flutter_local_notifications** (Phase 3+) | Segmentation for rare-find alerts, streak reminders. |
 | Analytics | **PostHog** + **Sentry** | Privacy-friendly, generous free tiers. |
-| Maps | **react-native-maps** (Apple Maps on iOS, Google Maps on Android) | Free Apple Maps; Google Maps has $200/mo credit. |
-| Web | **Expo web / Next.js landing** | PWA later for viral share pages. |
+| Maps | **`google_maps_flutter`** / **`flutter_map`** (Apple/Google tiles where licensed) | `flutter_map` for web parity; native maps where free. |
+| Web | **Flutter web** for smoke testing and design validation; separate landing page deferred | Web is a development/debug target, not a shipping MVP target, until Phase 5. |
+| CI/Builds | **GitHub Actions** + **Codemagic** + **Fastlane** fallback | Codemagic free tier includes macOS/iOS builds; GH Actions for PR checks. |
 
 ### 5.2 System Architecture
 
 ```
-┌─────────────────────────── CLIENT (Expo) ─────────────────────────────┐
-│  Camera (vision-camera)                                                │
-│    ├─ Frame processor: on-device cat detector (MLKit/TFLite)           │
+┌────────────────────────── CLIENT (Flutter) ─────────────────────────────┐
+│  Camera (`camera` plugin)                                                │
+│    ├─ Image stream: on-device cat detector (MLKit/TFLite)              │
 │    ├─ Liveness cues: parallax/motion, reflection/moiré detection       │
-│    └─ Capture: full-res JPEG + bbox + device metadata                  │
-│  Local queue (expo-sqlite) → retry-safe upload                         │
+│    └─ Capture: full-res JPEG + bbox + device metadata                    │
+│  Local queue (`drift`/`sqflite`) → retry-safe upload                     │
 └───────────────┬─────────────────────────────────────────────────────────┘
                 │ HTTPS
 ┌───────────────▼────────────────── BACKEND (Convex) ───────────────────────┐
@@ -271,7 +275,7 @@ rolls:        scanId, raritySeed, rarityRoll, createdAt  // audit trail
 
 | Item | Beta (1K DAU) | Launch (20K DAU) | Scale (100K DAU) |
 |---|---|---|---|
-| Expo/EAS | $29–99 | $99 | $99–250 |
+| Codemagic / CI | $29–99 | $99 | $99–250 |
 | Convex | $0–25 | $25–100 | $100–500 |
 | Cloudflare R2+CDN | ~$1 | $5–20 | $50–150 |
 | Vision-LLM (~$0.002/scan) | $20 | $400 | $2K |
@@ -283,9 +287,9 @@ rolls:        scanId, raritySeed, rarityRoll, createdAt  // audit trail
 
 ### 5.7 Phased Build Plan (16 weeks to MVP)
 
-**Phase 0 — Foundations (weeks 1–2):** repo, CI, EAS dev builds, Clerk/Convex auth, schema v1, R2 upload, PostHog/Sentry, design system.
+**Phase 0 — Foundations (weeks 1–2):** repo, CI, Codemagic dev builds, Clerk/Convex auth, schema v1, R2 upload, PostHog/Sentry, design system. **Includes the 3-day Flutter/Convex/Clerk/camera validation checklist.**
 
-**Phase 1 — Core scan loop (weeks 3–6):** vision-camera + MLKit, async `scanPipeline`, keepsake card + album, cans/regen/ledger, basic snack-throw minigame. Gate: 20 beta testers, first-scan success ≥80%.
+**Phase 1 — Core scan loop (weeks 3–6):** `camera` plugin + MLKit, async `scanPipeline`, keepsake card + album, cans/regen/ledger, basic snack-throw minigame. Gate: 20 beta testers, first-scan success ≥80%.
 
 **Phase 2 — Collection & polish (weeks 7–9):** cutouts, rename, release/delete, favorites/filters, custom TFLite model v1, lens/zoom controls, streaks/XP/levels, notifications.
 

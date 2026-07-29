@@ -34,30 +34,30 @@ Owner codes used below (see Part II §2 for how these map to real Hermes profile
 
 | Code | Role | Owns (code areas) |
 |---|---|---|
-| **MOB** | Mobile agent | `app/` — screens, camera, components, navigation |
-| **ML**  | ML agent | `app/ml/`, `convex/scanPipeline.ts`, model eval, `scripts/eval/` |
-| **BE**  | Backend agent | `convex/` — schema, functions, auth, economy, geo |
-| **DSN** | Design agent | `app/theme/`, `app/components/`, store assets, `web/` landing |
-| **INF** | Infra agent | CI/EAS, R2, `.github/workflows/`, `scripts/`, env config |
+| **MOB** | Mobile agent | `apps/mobile/lib/` — screens, camera, widgets, navigation |
+| **ML**  | ML agent | `apps/mobile/lib/features/scan/ml/`, `packages/backend/convex/scanPipeline.ts`, model eval, `scripts/eval/` |
+| **BE**  | Backend agent | `packages/backend/convex/` — schema, functions, auth, economy, geo |
+| **DSN** | Design agent | `apps/mobile/lib/core/theme/`, `apps/mobile/lib/features/*/widgets/`, store assets, landing page |
+| **INF** | Infra agent | CI/Codemagic, R2, `.github/workflows/`, `scripts/`, env config |
 | **QA**  | QA/review agent | tests, device matrix, gate reports, `docs/qa/` |
 | **ORC** | Orchestrator (planner profile) | docs, tracker, task graph — never writes app code |
 
-Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others request changes via PR), `package.json` / lockfiles (INF merges last).
+Shared/locked areas: `docs/` (ORC only), `packages/backend/convex/schema.ts` (BE only; others request changes via PR), `pubspec.yaml` / `packages/backend/package.json` / lockfiles / `codemagic.yaml` / CI config (INF merges last).
 
 ---
 
 ### Sprint 1 (Wk 1–2) — Foundations + Detection Baseline
 
-**Goal:** Repo is a runnable Expo app skeleton with CI, and the ML lane has a working camera + MLKit detection on real devices.
+**Goal:** Repo is a runnable Flutter app skeleton with CI, and the ML lane has a working camera + MLKit detection on real devices.
 
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
-| S1.1 | Scaffold monorepo: `app/` (Expo SDK 57, TS), `convex/`, `scripts/`, `.cursorrules`, root `package.json` workspaces | INF | — | `npx expo start` boots; `npx convex dev` connects to a dev deployment |
-| S1.2 | CI: GitHub Actions — lint, typecheck, unit tests on PR; EAS dev-build workflow (manual trigger) | INF | S1.1 | PR checks green on a test PR; EAS dev client installable on Android + iOS |
+| S1.1 | Scaffold monorepo: `apps/mobile/` (Flutter SDK, Dart), `packages/backend/`, `packages/shared/`, `scripts/`, `.cursorrules`, root configs | INF | — | `flutter run -d <device>` boots on Android/iOS; `npx convex dev` connects to a dev deployment |
+| S1.2 | CI: GitHub Actions — flutter analyze/test, dart format, backend lint/typecheck/test; Codemagic development workflow (manual trigger) | INF | S1.1 | PR checks green on a test PR; Codemagic dev build installable on Android + iOS |
 | S1.3 | Branch protection on `main` (require PR + checks), repo secrets (Clerk, Convex, R2, OpenAI, Replicate) | INF | S1.1 | Direct push to `main` rejected; secrets documented in `docs/ops/secrets.md` (names only) |
-| S1.4 | Design system v0: color/type tokens, sticker-book card component, dark/light mode | DSN | S1.1 | `app/theme/tokens.ts` + `<KeepsakeCard/>` renders in a Storybook-style sandbox screen |
-| S1.5 | Camera shell: vision-camera v4 live preview, permission flow, capture button | MOB | S1.1 | 30fps preview on mid-range device; capture returns full-res JPEG + metadata |
-| S1.6 | MLKit object detection frame processor with cat-like filter + bbox overlay | ML | S1.5 | Detection feedback ≤500ms; bbox drawn on detected objects |
+| S1.4 | Design system v0: color/type tokens, `KeepsakeCard` widget, dark/light mode | DSN | S1.1 | `apps/mobile/lib/core/theme/tokens.dart` + `KeepsakeCard` renders in a debug sandbox screen |
+| S1.5 | Camera shell: `camera` plugin live preview, permission flow, capture button | MOB | S1.1 | 30fps preview on mid-range device; capture returns full-res JPEG + metadata |
+| S1.6 | MLKit object detection on `CameraImage` stream with cat-like filter + bbox overlay | ML | S1.5 | Detection feedback ≤500ms; bbox drawn on detected objects |
 | S1.7 | Test set collection: 200+ real cat photos (distance/light/breed/pose matrix), labeled, stored in `scripts/eval/testset/` (LFS or R2) | ML | — | 200 images with `labels.json` (has_cat, distance_band, lighting, pose) |
 | S1.8 | PostHog + Sentry wiring (opt-in toggles) | BE | S1.1 | Events/crashes visible in dashboards from a dev build |
 
@@ -69,7 +69,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
 | S2.1 | Clerk + Convex auth (Google/Apple/email-code), `users` table, session gating | BE | S1.1 | Sign in/out works on both platforms; `deletedAt` soft-delete flow |
-| S2.2 | Convex schema v1: all tables from PRD §5.3 + indexes | BE | S2.1 | `convex/schema.ts` deployed; migration doc in `convex/README.md` |
+| S2.2 | Convex schema v1: all tables from PRD §5.3 + indexes | BE | S2.1 | `packages/backend/convex/schema.ts` deployed; migration doc in `packages/backend/convex/README.md` |
 | S2.3 | R2 upload pipeline: presigned URL → original → thumbnail (Cloudflare Worker) | BE | S2.2 | Image round-trips; EXIF stripped; signed URLs ≤15min TTL |
 | S2.4 | `scanPipeline` action: rate-limit + spend can (transactional) → pHash dup rejection → vision-LLM verify (`is_real_cat`, `is_live_photo`, breed, colors, quality, confidence) | BE+ML | S2.3 | Structured verdict JSON; auto verdict ≤5s; cost/scan logged |
 | S2.5 | 512-d embeddings (OpenCLIP/MobileCLIP pet-fine-tuned) + `vectors` table + fuzzy duplicate query | ML | S2.3 | Threshold report: precision/recall of dedup on test set |
@@ -92,9 +92,9 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 | S3.1 | Lens selector (ultrawide/1x/tele), pinch zoom, tap-to-focus/exposure lock | MOB | S1.5 | All controls work on devices where hardware allows; graceful degradation elsewhere |
 | S3.2 | Framing hints + low-light guidance from detector confidence; "move closer / too dark" cues | MOB+ML | S3.1 | Hints fire within 1s of condition change |
 | S3.3 | Anti-spoof on-device heuristics: multi-frame parallax + moiré detection flags (sent as metadata, not verdicts) | ML | S1.6 | Flags present in capture payload; screen-photo test set flagged ≥90% |
-| S3.4 | Snack-can minigame: drag-and-release into green zone, 3 attempts/can, physics + juice | MOB | S3.1 | Playable on device; tunable difficulty constants in one config file |
+| S3.4 | Snack-can minigame: drag-and-release into green zone, 3 attempts/can, physics + juice (custom Flutter gesture physics or `flame`) | MOB | S3.1 | Playable on device; tunable difficulty constants in one config file |
 | S3.5 | Server-authoritative throw result (attempt consumed, outcome seeded server-side) | BE | S3.4 | Client cannot forge a success; replay/idempotency safe |
-| S3.6 | Local queue (expo-sqlite): capture → retry-safe upload with backoff | MOB | S2.3 | Airplane-mode capture syncs on reconnect exactly once |
+| S3.6 | Local queue (`drift`/`sqflite`): capture → retry-safe upload with backoff | MOB | S2.3 | Airplane-mode capture syncs on reconnect exactly once |
 | S3.7 | Onboarding shell: guided first-catch tutorial with staged/practice cat, pity rule | MOB | S3.4 | First catch cannot fail; skippable after completion |
 
 **Critical path:** S3.1 → S3.4 → S3.5.
@@ -108,7 +108,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 | S4.3 | Duplicate handling: same physical cat merges into existing keepsake; ambiguous match prompts user | BE+ML | S4.1 | Dedup threshold from S2.5 report applied; merge UX copy reviewed |
 | S4.4 | Album v1: virtualized grid, flip-to-reveal, thumbnails via CDN | MOB | S4.2 | 500 mock cards scroll 60fps, open <1s |
 | S4.5 | Economy v1: can regen timer + cap, coins, XP/levels — all via append-only `economyLedger` with idempotency keys | BE | S2.2 | Ledger entries for every grant/spend; no balance mutation outside ledger replay |
-| S4.6 | Beta build to 20 testers (EAS internal distribution); feedback channel + crash monitoring | INF+QA | S4.1–4.5 | 20 installs; crash-free ≥99% during sprint |
+| S4.6 | Beta build to 20 testers (Codemagic preview/internal distribution); feedback channel + crash monitoring | INF+QA | S4.1–4.5 | 20 installs; crash-free ≥99% during sprint |
 
 **GATE G2 (end of Wk 8):** 20 beta testers complete first catch unaided; measured first-session catch success ≥80%; crash-free ≥99%.
 **FAIL path:** Sprint 4.5 fix window (max 1 week) before Sprint 5 scope starts; no new features during fix window.
@@ -123,7 +123,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 | S5.2 | Filters + search: rarity, type, date, name; multi-select release | MOB | S5.1 | Find any card in <10s at 100+ keepsakes |
 | S5.3 | Album performance: CDN thumbnails, lazy cutouts, pagination | MOB+BE | S5.1 | p95 album open <1s @500 cards (QA-measured) |
 | S5.4 | Streaks, daily quests, XP leveling UI | BE+MOB | S4.5 | Streak at-risk state computed server-side |
-| S5.5 | Push notifications: streak at risk, can cap full, rare friend find (OneSignal/Expo Push) | BE | S5.4 | Opt-in; deep links land on correct screen |
+| S5.5 | Push notifications: streak at risk, can cap full, rare friend find (Firebase Cloud Messaging / APNs via `flutter_local_notifications` + `firebase_messaging`) | BE | S5.4 | Opt-in; deep links land on correct screen |
 | S5.6 | Share card as image + deep link | MOB | S4.2 | Shared image renders card; link opens app or landing fallback |
 | S5.7 | Custom TFLite cat model v1 (fine-tuned, hard negatives: dogs/plush/screens) — swap-in behind flag vs MLKit | ML | S1.7 | Recall ≥ MLKit baseline on test set; A/B flag in config |
 
@@ -131,8 +131,8 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
-| S6.1 | RevenueCat: Pro subscription ($4.99/mo), can packs, cosmetic packs; receipt validation server-side | BE | S4.5 | Sandbox purchase → ledger entry; entitlements sync |
-| S6.2 | AdMob rewarded ads with SSV callbacks; hard daily cap; never in scan loop | BE+MOB | S6.1 | Reward delivery server-verified; "watched but unpaid" path covered by test |
+| S6.1 | `purchases_flutter` (RevenueCat): Pro subscription ($4.99/mo), can packs, cosmetic packs; receipt validation server-side | BE | S4.5 | Sandbox purchase → ledger entry; entitlements sync |
+| S6.2 | `google_mobile_ads` rewarded ads with SSV callbacks; hard daily cap; never in scan loop | BE+MOB | S6.1 | Reward delivery server-verified; "watched but unpaid" path covered by test |
 | S6.3 | Coin sinks: cans, renames, card frames, basic cosmetics | BE+DSN | S6.1 | Free player median ≥10 catches/day (simulated + beta telemetry) |
 | S6.4 | Friends: add by code, view albums, activity feed | BE+MOB | S2.1 | Friend loop E2E on two devices |
 | S6.5 | Report button on every pin/card + reason categories; auto-hide at 3 pending reports | BE+MOB | S6.4 | Report lands in `moderationQ`; auto-hide verified |
@@ -147,7 +147,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
 | S7.1 | `sightings` writes from completed scans: geohash-6 + jitter, coarse coords only | BE | S4.1 | Exact coords never leave `scans` (private) — verified by API audit test |
-| S7.2 | Clustered community map (react-native-maps): clusters at low zoom, pins at high zoom, paginated by geohash bucket | MOB | S7.1 | 10K seeded pins pan/zoom without jank |
+| S7.2 | Clustered community map (`google_maps_flutter` or `flutter_map` for web parity): clusters at low zoom, pins at high zoom, paginated by geohash bucket | MOB | S7.1 | 10K seeded pins pan/zoom without jank |
 | S7.3 | Proximity claim: ≤50m to collect linked keepsake; server-side distance check + anti-teleport | BE+MOB | S7.2 | Claim flow E2E; spoofed GPS rejected in test |
 | S7.4 | Safety UX: first-open "historical, not live" notice, no-trespassing copy, no background location audit | MOB+DSN | S7.2 | Location permission only when-in-use; store privacy labels match reality |
 | S7.5 | Load test: 50K simulated DAU against scan pipeline + map queries; queue backpressure verified | INF+QA | S4.1, S7.2 | p95 API latency <1s under load; no dropped scans; report in `docs/qa/load-test.md` |
@@ -156,7 +156,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
-| S8.1 | iOS TestFlight (public link) + Android closed testing tracks live | INF | all | Install + first catch on 10-device matrix (list in `docs/qa/device-matrix.md`) |
+| S8.1 | iOS TestFlight (public link) + Android closed testing tracks live (Flutter builds via Codemagic/Fastlane) | INF | all | Install + first catch on 10-device matrix (list in `docs/qa/device-matrix.md`) |
 | S8.2 | Store assets: screenshots, listing copy, privacy labels, age gate, GDPR consent + in-app account deletion + web deletion page | DSN+BE+INF | S7.4 | Both listings pass pre-review checklist; deletion flow E2E tested |
 | S8.3 | Regression pass on all MVP acceptance criteria (PRD §6.5 F1–F8) | QA | all | `docs/qa/G4-launch-checklist.md` — every F# signed off with evidence |
 | S8.4 | Crash/perf hardening: fix all Sentry sev-1/2; album/scan perf budgets re-verified | MOB+BE | S8.1 | Crash-free sessions ≥99.5% over final week |
@@ -188,6 +188,8 @@ G3 → S7.1 sightings → S7.2 map → S7.5 load test → S8.3 regression → G4
 ### 1. Execution model: Kanban for cross-agent routing, subagent-driven development for within-task execution
 
 **Decision:** use **Hermes Kanban as the system of record** for sprint tasks, and **subagent-driven-development (SDD)** as the execution pattern inside each task. Kanban alone lacks the per-task review loop; raw SDD (one orchestrator session driving everything) doesn't survive crashes and has no audit trail. The hybrid gives us both.
+
+The project is pivoting to **Flutter** for the mobile/web client; the backend remains Convex. Exact package versions, file paths, and client-specific commands are in `01-mvp-stack-and-scaffold.md`.
 
 - **Kanban (cross-agent):** every sprint task (S1.1 … S8.6) is one card. Assignee = the owning profile (MOB/ML/BE/DSN/INF/QA). Dependencies encoded with `parents=[...]` at creation — never prose "wait for X". A card = the atomic unit of *coordination*.
 - **SDD (within-agent):** when a worker profile picks up a card, it decomposes the card into 2–5 minute tasks and executes each with the SDD loop: **implementer subagent → spec-compliance reviewer → code-quality reviewer → mark complete**. A card = a *batch* of SDD cycles.
@@ -223,8 +225,8 @@ Examples: `s2-s2.4-scan-pipeline-be`, `s4-s4.2-keepsake-card-mob`
 - Branches live < 1 sprint. Rebase on `main` at branch creation and before PR.
 - PR title: `[S<N>.<task>] <description>`; body must include: card id, acceptance criteria checklist (copied from the card), evidence (screenshots/logs/test output), tracker line to merge.
 - **PR boundaries (conflict avoidance):**
-  - `convex/schema.ts` — BE only. Other agents needing schema changes file a sub-card to BE; never edit in a non-BE PR.
-  - `package.json`, lockfiles, `app.json`, EAS config — INF merges last; agents note dependency additions in the PR body and INF applies them in a follow-up commit on the same branch before merge.
+  - `packages/backend/convex/schema.ts` — BE only. Other agents needing schema changes file a sub-card to BE; never edit in a non-BE PR.
+  - `pubspec.yaml`, mobile platform configs (`android/`, `ios/`, `macos/`), lockfiles (`packages/backend/pnpm-lock.yaml`, `pubspec.lock`), Codemagic/Fastlane config — INF merges last; agents note dependency and native-config additions in the PR body and INF applies them in a follow-up commit on the same branch before merge.
   - `docs/` — ORC only (agents propose via PR comments).
   - Cross-area cards (e.g. S2.7 MOB+BE) split into two cards sharing a feature branch prefix: `s2-s2.7a-fallback-client-mob`, `s2-s2.7b-fallback-api-be`, BE PR merges first, MOB PR rebases.
 - Merge: squash-merge, delete branch. ORC (or INF for infra PRs) merges after QA review + CI.
@@ -288,7 +290,7 @@ Failed review → new fix card assigned to the original owner, parented to the r
 | Sprint open | Create cards with parents from this plan; verify assignees exist (`hermes profile list`); write sprint file; post plan to user |
 | Daily | Board sweep: recover stuck workers, answer blocked cards, update tracker, check path-overlap on ready cards |
 | Mid-sprint | Contract check: confirm interface lead PRs landed; re-sequence if slipping |
-| Sprint close | Trigger integration review; collect gate metrics (gate sprints); demo build via EAS; close sprint file; retro notes; tracker update; next sprint cards |
+| Sprint close | Trigger integration review; collect gate metrics (gate sprints); demo build via Codemagic; close sprint file; retro notes; tracker update; next sprint cards |
 
 ### 10. Pre-flight checklist (before Sprint 1 starts)
 
