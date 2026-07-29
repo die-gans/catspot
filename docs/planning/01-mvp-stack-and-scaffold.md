@@ -14,26 +14,26 @@
 
 ## 1. Final Stack Decisions (locked)
 
-| Layer | Final choice | Version | Rationale / deviation from PRD |
-|---|---|---|---|
-| Mobile framework | **Expo SDK 54** (React Native **0.81**, New Architecture ON) | `expo@^54` | SDK 54 is current stable; PRD said "52+", superseded. |
-| Language | TypeScript | `typescript@~5.9` | Strict mode, shared types between app and Convex. |
-| Package manager | **pnpm 9** + workspaces | `pnpm@9.15` | Monorepo-native, fast, used by Convex/Expo templates. |
-| Node | 20 LTS (`>=20.11`) | `.nvmrc` | EAS default. |
-| Camera | `react-native-vision-camera` | `^4.6` | v4 required for frame processors + lens control. |
-| Frame processors | `react-native-worklets-core` | `^1.5` | vision-camera v4 dependency. |
-| On-device ML (MVP) | `@infinitered/react-native-mlkit-object-detection` | `^2.1` | MLKit wrapper compatible with Expo config plugins; custom TFLite is Phase 2 (spike may accelerate). |
-| Backend | **Convex** | `convex@^1.25` | As per PRD. |
-| Auth | **Clerk** `@clerk/clerk-expo` + Convex JWT integration | `^2.14` | Official Convex-Clerk template flow. |
+| Layer | Final choice | Version (verify at scaffold) | Rationale / deviation from PRD |
+|---|---|---|---|---|
+| Expo SDK | **Expo SDK 57** (current stable; pins React Native version automatically) | `expo@^57` (latest 57.0.8) | Use `expo@latest` at scaffold time; do not manually pin RN. PRD said "52+", superseded. |
+| Language | TypeScript | current stable | Strict mode, shared types between app and Convex. |
+| Package manager | **pnpm** + workspaces | `pnpm@latest` (latest 11.17.0) | Monorepo-native, fast, used by Convex/Expo templates. |
+| Node | 22 LTS (`>=22.0`) | `.nvmrc` | Current LTS; verify at scaffold time. |
+| Camera | `react-native-vision-camera` | `^5.2.0` (latest) | v5 required for frame processors + lens control. |
+| Frame processors | `react-native-worklets-core` | pinned by vision-camera | Required worklet runtime for frame processors. |
+| On-device ML (MVP) | `@infinitered/react-native-mlkit-object-detection` | `^5.0.0` (latest) or MLKit config plugin | MLKit wrapper compatible with Expo config plugins; custom TFLite is Phase 2 (spike may accelerate). |
+| Backend | **Convex** | `convex@^1.42.3` (latest) | As per PRD. |
+| Auth | **Clerk** `@clerk/clerk-expo` + Convex JWT integration | `^2.19.31` (latest) | Official Convex-Clerk template flow. |
 | Image storage | **Cloudflare R2** via `@aws-sdk/client-s3` from Convex actions | `^3.700` | Private buckets + signed URLs; EXIF stripped client-side before upload. |
-| Server vision | **OpenAI** `gpt-4o-mini` vision | `openai@^4.80` | As per PRD; Gemini Flash kept as env-swappable fallback later. |
-| Image cutout | **Replicate** `rembg` (`cjwbw/rembg`) | `replicate@^1.0` | Behind a provider interface from day one (PRD risk #6). |
-| Maps | `react-native-maps` | `1.20.x` (Expo-pinned) | Phase 4, installed now to avoid native rebuild churn. |
-| Analytics | PostHog `posthog-react-native` + Sentry `sentry-expo` | `^4 / ^8` | As per PRD. |
-| State/data | Convex React hooks + `zustand@^5` (local UI state only) | — | No Redux. Server state = Convex. |
+| Server vision | **OpenAI** `gpt-4o-mini` vision | `openai@^7.1.0` (latest) | As per PRD; Gemini Flash kept as env-swappable fallback later. |
+| Image cutout | **Replicate** `rembg` (`cjwbw/rembg`) | `replicate@^1.4.0` (latest) | Behind a provider interface from day one (PRD risk #6). |
+| Maps | `react-native-maps` | Expo-pinned | Phase 4, installed now to avoid native rebuild churn. |
+| Analytics | PostHog `posthog-react-native` + Sentry `sentry-expo` | `^4.61.1 / ^7.2.0` | As per PRD. |
+| State/data | Convex React hooks + `zustand` (local UI state only) | `^5.0.14` | No Redux. Server state = Convex. |
 | Local queue | `expo-sqlite` | SDK-bundled | Retry-safe scan upload queue. |
-| Testing | **Vitest** (unit/logic, shared utils) + **jest-expo** (component smoke tests) + **Maestro** (E2E, Phase 1) | `vitest@^3`, `jest-expo@~54` | Vitest for Convex-side pure functions; jest-expo minimal. |
-| Lint/format | ESLint 9 flat config + Prettier 3 | — | One config at repo root. |
+| Testing | **Vitest** (unit/logic, shared utils) + **jest-expo** (component smoke tests) + **Maestro** (E2E, Phase 1) | `vitest@latest` / `jest-expo@~57.0.2` | Vitest for Convex-side pure functions; jest-expo minimal. Verify at scaffold. |
+| Lint/format | ESLint 9 flat config + Prettier 3 | latest | One config at repo root. |
 | CI | **GitHub Actions** (typecheck, lint, test, `npx convex deploy --dry-run` equivalent typecheck) | — | See §6. |
 | Builds/OTA | **EAS Build + EAS Update** | `eas-cli@latest` | `eas.json` profiles: development / preview / production. |
 | Env/secrets | `.env.local` (gitignored) + `app.config.ts` extra + EAS secrets | — | See §5. |

@@ -50,7 +50,7 @@ Shared/locked areas: `docs/` (ORC only), `convex/schema.ts` (BE only; others req
 
 | # | Task | Owner | Deps | Acceptance criteria |
 |---|---|---|---|---|
-| S1.1 | Scaffold monorepo: `app/` (Expo SDK 52+, TS), `convex/`, `scripts/`, `.cursorrules`, root `package.json` workspaces | INF | — | `npx expo start` boots; `npx convex dev` connects to a dev deployment |
+| S1.1 | Scaffold monorepo: `app/` (Expo SDK 57, TS), `convex/`, `scripts/`, `.cursorrules`, root `package.json` workspaces | INF | — | `npx expo start` boots; `npx convex dev` connects to a dev deployment |
 | S1.2 | CI: GitHub Actions — lint, typecheck, unit tests on PR; EAS dev-build workflow (manual trigger) | INF | S1.1 | PR checks green on a test PR; EAS dev client installable on Android + iOS |
 | S1.3 | Branch protection on `main` (require PR + checks), repo secrets (Clerk, Convex, R2, OpenAI, Replicate) | INF | S1.1 | Direct push to `main` rejected; secrets documented in `docs/ops/secrets.md` (names only) |
 | S1.4 | Design system v0: color/type tokens, sticker-book card component, dark/light mode | DSN | S1.1 | `app/theme/tokens.ts` + `<KeepsakeCard/>` renders in a Storybook-style sandbox screen |
