@@ -26,12 +26,21 @@ Point your phone at a real cat, verify the sighting, and turn it into a collecti
 
 ---
 
-## 🚀 Quick Start (For Future Development)
+## 🚀 Quick Start
 
 ```bash
 git clone https://github.com/die-gans/catspot.git
 cd catspot
-# MVP stack is Flutter + Dart + Convex — setup instructions added when code lands.
+
+# Flutter client (FVM-managed stable SDK)
+cd apps/mobile
+fvm flutter pub get
+fvm flutter run -d <device>
+
+# Backend (later card)
+cd packages/backend
+pnpm install
+npx convex dev
 ```
 
 ---
