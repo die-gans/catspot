@@ -5,6 +5,8 @@
 **Date:** 2026-07-29
 **Scope:** 16-week MVP (Sprints 1–8) + the agent orchestration framework that executes it. No code in this document.
 
+> **Path shorthand:** `app/` = `apps/mobile/`, `convex/` = `packages/backend/convex/`. Exact monorepo layout, package versions, and file paths are in `01-mvp-stack-and-scaffold.md`.
+
 ---
 
 ## Part I — MVP Implementation Roadmap (8 × 2-week sprints)
