@@ -1,0 +1,4 @@
+# apps/mobile analysis options.
+# The root configuration owns the rule set; update ../../analysis_options.yaml for shared changes.
+
+include: ../../analysis_options.yaml

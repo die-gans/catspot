@@ -1,0 +1,42 @@
+# Root Dart analysis options for the Catspot monorepo.
+# Referenced by apps/mobile/analysis_options.yaml and packages/shared/analysis_options.yaml.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    missing_required_param: error
+    missing_return: error
+    invalid_assignment: error
+
+formatter:
+  page_width: 80
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    avoid_dynamic_calls: true
+    avoid_print: false
+    avoid_unnecessary_containers: true
+    avoid_web_libraries_in_flutter: true
+    cancel_subscriptions: true
+    close_sinks: true
+    directives_ordering: true
+    eol_at_end_of_file: true
+    no_duplicate_case_values: true
+    noop_primitive_operations: true
+    only_throw_errors: true
+    sort_child_properties_last: true
+    sort_constructors_first: true
+    type_annotate_public_apis: true
+    unnecessary_await_in_return: true
+    use_super_parameters: true

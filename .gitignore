@@ -6,7 +6,21 @@ yarn-error.log*
 .pnpm-debug.log*
 *.log
 
-# Expo / React Native
+# Flutter / Dart
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/doc/api/
+*.dart.js
+*.info.json
+*.js
+coverage/
+
+# Expo / React Native (legacy)
 .expo/
 .expo-shared/
 dist/
@@ -62,3 +76,6 @@ coverage/
 *.tsbuildinfo
 .vercel
 .netlify
+
+# FVM Version Cache
+.fvm/

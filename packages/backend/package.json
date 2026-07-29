@@ -1,0 +1,17 @@
+{
+  "name": "@catspot/backend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Convex backend for Catspot: auth, scan pipeline, vision, and economy functions.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint convex/"
+  },
+  "engines": {
+    "node": ">=22.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
