@@ -49,9 +49,11 @@ See `docs/PRD.md` for full technical blueprint.
 
 ## 🔄 In Progress
 
-- [ ] Pre-flight: create `catspot-*` Hermes profiles (or declare single-profile fallback) and run role smoke tests
-- [ ] Pre-flight: install Flutter SDK (via FVM) and validate on the home-server dev machine
+- [x] Pre-flight: create `catspot-*` Hermes profiles (orchestrator + 6 workers, ORC=K3/workers=K2.6, delegation pinned to K2.6) — 2026-07-29
+- [x] Pre-flight: install Flutter SDK (via FVM) — 2026-07-29 (FVM 4.1.2, Flutter 3.44.8, Dart 3.12.2; repo pinned via .fvmrc)
+- [ ] Pre-flight: role smoke tests for worker profiles
 - [ ] Project name finalization (Catspot is a placeholder)
+- [ ] **Sprint 1 STARTED 2026-07-29:** ✅ design system v1 (PR #1), ✅ scaffold S1.1 (PR #2). In flight: S1.4 theme tokens (DSN) + S1.2 CI (INF)
 
 ---
 
