@@ -1,3 +1,4 @@
+import 'package:catspot_mobile/core/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 /// Root MaterialApp for Catspot.
@@ -9,10 +10,7 @@ class CatspotApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Catspot',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: catspotLightThemeData(),
       home: const Scaffold(body: Center(child: Text('Catspot'))),
     );
   }
