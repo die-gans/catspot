@@ -1,4 +1,3 @@
-import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,14 +10,11 @@ class CatspotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClerkAuth(
-      config: buildClerkAuthConfig(),
-      child: ProviderScope(
-        child: MaterialApp.router(
-          title: 'Catspot',
-          theme: catspotLightThemeData(),
-          routerConfig: router,
-        ),
+    return ProviderScope(
+      child: MaterialApp.router(
+        title: 'Catspot',
+        theme: catspotLightThemeData(),
+        routerConfig: router,
       ),
     );
   }

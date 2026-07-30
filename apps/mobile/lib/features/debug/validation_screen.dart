@@ -1,16 +1,17 @@
 import 'dart:async';
 
-import 'package:clerk_flutter/clerk_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/clerk/clerk_token_bridge.dart';
 import '../../core/convex/catspot_convex_client.dart';
+import '../../core/firebase/firebase_token_bridge.dart';
 import '../../core/theme/theme.dart';
 
 /// V1/V2 on-device validation harness.
 ///
-/// Displays live status lines for the Convex client, Clerk session, the
-/// Clerk `convex` JWT, and the result of calling `users:current`.
+/// Displays live status lines for the Convex client, the Firebase auth state
+/// (signed in/out + uid), whether a Firebase ID token was obtained, and the
+/// result of calling `users:current`.
 class ValidationScreen extends StatefulWidget {
   /// Create a validation screen.
   const ValidationScreen({super.key});
@@ -20,8 +21,8 @@ class ValidationScreen extends StatefulWidget {
 }
 
 class _ValidationScreenState extends State<ValidationScreen> {
-  late final ClerkAuthState _authState;
   late final Stream<String> _connectionState;
+  late final Stream<User?> _authState;
 
   Future<String>? _tokenFuture;
   Future<String>? _userFuture;
@@ -29,24 +30,11 @@ class _ValidationScreenState extends State<ValidationScreen> {
   @override
   void initState() {
     super.initState();
-    _authState = ClerkAuth.of(context, listen: false);
-    _authState.addListener(_onAuthChanged);
+    _authState = FirebaseAuth.instance.authStateChanges();
     _connectionState = CatspotConvexClient.connectionState
         .map((state) => state.name)
         .handleError((_) => 'unknown');
     _poll();
-  }
-
-  @override
-  void dispose() {
-    _authState.removeListener(_onAuthChanged);
-    super.dispose();
-  }
-
-  void _onAuthChanged() {
-    if (mounted) {
-      setState(_poll);
-    }
   }
 
   void _poll() {
@@ -56,7 +44,7 @@ class _ValidationScreenState extends State<ValidationScreen> {
 
   Future<String> _fetchToken() async {
     try {
-      final token = await clerkTokenBridge(_authState)();
+      final token = await firebaseTokenBridge(forceRefresh: true)();
       if (token == null || token.isEmpty) {
         return 'none';
       }
@@ -95,14 +83,22 @@ class _ValidationScreenState extends State<ValidationScreen> {
             label: 'Convex connection',
             stream: _connectionState,
           ),
-          _StatusLine(
-            label: 'Clerk session',
-            value: _authState.isSignedIn ? 'signed in' : 'signed out',
+          _StatusStreamLine(
+            label: 'Firebase auth state',
+            stream: _authState
+                .map((user) {
+                  if (user == null) return 'signed out';
+                  return 'signed in: ${user.uid}';
+                })
+                .handleError((_) => 'unknown'),
           ),
-          _StatusFutureLine(label: "Clerk 'convex' JWT", future: _tokenFuture),
+          _StatusFutureLine(label: 'Firebase ID token', future: _tokenFuture),
           _StatusFutureLine(label: 'users:current', future: _userFuture),
           SizedBox(height: tokens.spacing.space4),
-          ElevatedButton(onPressed: _poll, child: const Text('Refresh')),
+          ElevatedButton(
+            onPressed: () => setState(_poll),
+            child: const Text('Refresh'),
+          ),
         ],
       ),
     );

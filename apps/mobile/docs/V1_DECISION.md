@@ -29,9 +29,21 @@ Use **`convex_flutter: ^3.0.1`** for the V1/V2 wiring spike.
 ## Remaining V1/V2 validation (on-device only)
 
 - [ ] Convex client connects to a live dev deployment and `users:current` returns a row.
-- [ ] Authenticated `users:upsertFromClerk` mutation round-trips with a Clerk JWT.
+- [ ] Authenticated `users:upsertFromFirebase` mutation round-trips with a Firebase ID token.
 - [ ] Real-time subscription receives updates when `users` row changes from the dashboard.
-- [ ] `clerk_flutter` sign-in (email code) works on a physical Android + iOS device.
-- [ ] `getToken(template: 'convex')` returns a JWT accepted by Convex `auth.config.ts`.
+- [ ] Firebase Auth email/password sign-in works on a physical Android + iOS device.
+- [ ] `FirebaseAuth.instance.currentUser?.getIdToken()` returns a JWT accepted by Convex `auth.config.ts`.
 - [ ] Sign-out / sign-in cycle is clean; token refresh does not strand the Convex client.
 - [ ] Native Rust build tooling is available on the build machine for Codemagic / local device builds.
+
+## 2026-07-30 amendment
+
+Auth provider swapped **Clerk → Firebase Auth** by boss decision. The same
+`convex_flutter` package decision above is unchanged; the `AuthTokenProvider`
+interface in `lib/core/convex/auth_token_provider.dart` still isolates the
+Convex client from the auth implementation. `clerk_flutter` and `clerk_auth`
+were removed from `pubspec.yaml`; `firebase_core` and `firebase_auth` were
+added. The auth gate, token bridge, and validation screen now use
+`FirebaseAuth.instance.authStateChanges()` and `User.getIdToken()` instead of
+Clerk session tokens. Apple/Google SSO buttons are deferred to a later platform
+configuration card.
