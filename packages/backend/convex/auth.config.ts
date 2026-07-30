@@ -1,16 +1,17 @@
 /**
- * Clerk JWT provider configuration for Convex.
+ * Firebase Auth provider configuration for Convex.
  *
- * The issuer domain is set from the Convex environment variable
- * CLERK_JWT_ISSUER_DOMAIN (e.g. https://your-app.clerk.accounts.dev).
+ * The issuer domain is built from the Convex environment variable
+ * FIREBASE_PROJECT_ID as `https://securetoken.google.com/<project-id>`.
  *
- * The JWT template in Clerk must be named exactly "convex".
+ * The client sends the Firebase ID token obtained from the firebase_auth SDK;
+ * Convex validates it as an OIDC token issued by Google Secure Token Service.
  */
 export default {
   providers: [
     {
-      domain: process.env.CLERK_JWT_ISSUER_DOMAIN,
-      applicationID: "convex",
+      domain: `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID}`,
+      applicationID: process.env.FIREBASE_PROJECT_ID,
     },
   ],
 };
