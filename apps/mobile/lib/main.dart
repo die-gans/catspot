@@ -1,7 +1,9 @@
+import 'package:catspot_mobile/app.dart';
+import 'package:catspot_mobile/core/convex/catspot_convex_client.dart';
 import 'package:flutter/material.dart';
 
-import 'app.dart';
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await CatspotConvexClient.initialize();
   runApp(const CatspotApp());
 }
