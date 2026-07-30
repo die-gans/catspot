@@ -18,17 +18,19 @@ export const current = queryGeneric({
     }
     return await ctx.db
       .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .withIndex("by_firebaseUid", (q) => q.eq("firebaseUid", identity.subject))
       .unique();
   },
 });
 
 /**
- * Create or update the users row from the Clerk identity claims.
+ * Create or update the users row from the Firebase Auth identity claims.
  *
- * Called by the client AuthSync provider after every Clerk sign-in state change.
+ * Called by the client after a Firebase sign-in; the first call creates the row,
+ * subsequent calls update the profile fields. The identity `subject` is the
+ * Firebase UID; email, name, and picture are read from the Firebase ID token.
  */
-export const upsertFromClerk = mutationGeneric({
+export const upsertFromFirebase = mutationGeneric({
   args: {
     // Optional overrides passed by the client; identity claims are authoritative.
     displayName: v.optional(v.string()),
@@ -43,10 +45,10 @@ export const upsertFromClerk = mutationGeneric({
       throw new Error("Not authenticated");
     }
 
-    const clerkId = identity.subject;
+    const firebaseUid = identity.subject;
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
+      .withIndex("by_firebaseUid", (q) => q.eq("firebaseUid", firebaseUid))
       .unique();
 
     const now = Date.now();
@@ -63,7 +65,7 @@ export const upsertFromClerk = mutationGeneric({
     }
 
     return await ctx.db.insert("users", {
-      clerkId,
+      firebaseUid,
       email: identity.email,
       displayName,
       avatar,

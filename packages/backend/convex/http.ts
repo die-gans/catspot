@@ -5,7 +5,8 @@ import { httpAction } from "./_generated/server.js";
  * Public HTTP router for Convex.
  *
  * Currently exposes a /health endpoint for deploy / monitoring checks.
- * Clerk webhooks will be added in a later card (S1.6+).
+ * Firebase Auth has no server-side webhook for user sync; the client calls
+ * `upsertFromFirebase` on first sign-in to create the user row.
  */
 const http = httpRouter();
 
@@ -19,8 +20,5 @@ http.route({
     });
   }),
 });
-
-// TODO(S1.6): add Clerk webhook POST handler (/clerk-webhook) to sync
-// user deletion / email verification events. Keep webhook secret in Convex env.
 
 export default http;
