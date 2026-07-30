@@ -103,6 +103,7 @@ When in doubt, consult in this order:
 - **Do not store images as database blobs.** Store URLs to R2; keep rows small and paginated.
 - **Do not promise Web3 or NFTs.** The project charter explicitly rejects this.
 - **Do not skip the technical spike.** The first 4 weeks must prove the scan pipeline works on real cats before full MVP scope is greenlit.
+- **Use the repo's agent skills.** `.agents/skills/` contains the official Flutter/Dart agent skills (flutter/agent-plugins + dart-lang/skills). Before any Flutter/Dart task, check for a matching skill (e.g. `flutter-add-widget-test`, `dart-run-static-analysis`, `dart-resolve-package-conflicts`, `flutter-apply-architecture-best-practices`) and follow its workflow.
 
 ---
 
