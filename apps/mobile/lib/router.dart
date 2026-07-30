@@ -36,9 +36,8 @@ final GoRouter router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const ClerkAuthGate(
-        home: _HomePlaceholder(),
-      ),
+      builder: (context, state) =>
+          const ClerkAuthGate(home: _HomePlaceholder()),
     ),
     GoRoute(
       path: '/sign-in',

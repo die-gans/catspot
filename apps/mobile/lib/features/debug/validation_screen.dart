@@ -99,19 +99,10 @@ class _ValidationScreenState extends State<ValidationScreen> {
             label: 'Clerk session',
             value: _authState.isSignedIn ? 'signed in' : 'signed out',
           ),
-          _StatusFutureLine(
-            label: "Clerk 'convex' JWT",
-            future: _tokenFuture,
-          ),
-          _StatusFutureLine(
-            label: 'users:current',
-            future: _userFuture,
-          ),
+          _StatusFutureLine(label: "Clerk 'convex' JWT", future: _tokenFuture),
+          _StatusFutureLine(label: 'users:current', future: _userFuture),
           SizedBox(height: tokens.spacing.space4),
-          ElevatedButton(
-            onPressed: _poll,
-            child: const Text('Refresh'),
-          ),
+          ElevatedButton(onPressed: _poll, child: const Text('Refresh')),
         ],
       ),
     );

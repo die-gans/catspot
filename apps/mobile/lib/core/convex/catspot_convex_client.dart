@@ -85,28 +85,19 @@ class CatspotConvexClient {
   }
 
   /// Run a Convex query and return the raw JSON response.
-  static Future<String> query(
-    String name,
-    Map<String, dynamic> args,
-  ) async {
+  static Future<String> query(String name, Map<String, dynamic> args) async {
     _assertInitialized();
     return ConvexClient.instance.query(name, args);
   }
 
   /// Run a Convex mutation and return the raw JSON response.
-  static Future<String> mutation(
-    String name,
-    Map<String, dynamic> args,
-  ) async {
+  static Future<String> mutation(String name, Map<String, dynamic> args) async {
     _assertInitialized();
     return ConvexClient.instance.mutation(name: name, args: args);
   }
 
   /// Run a Convex action and return the raw JSON response.
-  static Future<String> action(
-    String name,
-    Map<String, dynamic> args,
-  ) async {
+  static Future<String> action(String name, Map<String, dynamic> args) async {
     _assertInitialized();
     return ConvexClient.instance.action(name: name, args: args);
   }

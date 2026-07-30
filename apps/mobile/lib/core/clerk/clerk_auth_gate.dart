@@ -22,10 +22,8 @@ class ClerkAuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClerkAuthBuilder(
-      signedInBuilder: (context, authState) => _ClerkConvexAuthSync(
-        authState: authState,
-        child: home,
-      ),
+      signedInBuilder: (context, authState) =>
+          _ClerkConvexAuthSync(authState: authState, child: home),
       signedOutBuilder: (context, authState) => const _SignInShell(),
     );
   }
@@ -37,9 +35,7 @@ class _SignInShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 
