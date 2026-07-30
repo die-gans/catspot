@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "730762336093",
+    "project_id": "catspot-9ee0d",
+    "storage_bucket": "catspot-9ee0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:730762336093:android:785fbd1cf565e319f23ab4",
+        "android_client_info": {
+          "package_name": "app.catspot.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "730762336093-4jpmtic805ii9kkfgrl0ip9tst34lqr3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD287oNDFZCoReGK5pYOhFGuZBvmM0RuCk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "730762336093-4jpmtic805ii9kkfgrl0ip9tst34lqr3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
