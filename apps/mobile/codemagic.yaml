@@ -1,0 +1,71 @@
+# Catspot Codemagic build pipelines
+# See apps/mobile/docs/BUILDS.md for operating instructions.
+
+workflows:
+  android-debug-apk:
+    name: Android Debug APK (smoke test)
+    instance_type: mac_mini_m1
+    working_directory: apps/mobile
+    environment:
+      flutter: fvm
+      vars:
+        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $CM_BUILD_DIR/apps/mobile/.dart_tool
+    scripts:
+      - name: Get Flutter packages
+        script: fvm flutter pub get
+      - name: Build Android debug APK
+        script: fvm flutter build apk --debug --dart-define=CONVEX_URL=$CONVEX_URL
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+
+  # ---------------------------------------------------------------------------
+  # DORMANT until Apple Developer Program activates + App Store Connect API key
+  # is added to Codemagic env group 'app_store_connect'.
+  # ---------------------------------------------------------------------------
+  ios-dev-ipa:
+    name: iOS Dev IPA
+    instance_type: mac_mini_m1
+    working_directory: apps/mobile
+    environment:
+      flutter: fvm
+      xcode: latest
+      cocoapods: default
+      vars:
+        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
+      groups:
+        # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
+        # APP_STORE_CONNECT_PRIVATE_KEY
+        - app_store_connect
+        # CERTIFICATE_PRIVATE_KEY
+        - certificate_credentials
+      ios_signing:
+        distribution_type: development
+        bundle_identifier: app.catspot.mobile
+    # No automatic triggers: manual only. This workflow remains dormant until
+    # Apple Developer Program activates and the app_store_connect env group is
+    # populated in Codemagic.
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $CM_BUILD_DIR/apps/mobile/.dart_tool
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      - name: Get Flutter packages
+        script: fvm flutter pub get
+      - name: Install CocoaPods
+        script: cd ios && pod install
+      - name: Build iOS dev IPA
+        script: fvm flutter build ipa --debug --dart-define=CONVEX_URL=$CONVEX_URL
+    artifacts:
+      - build/ios/ipa/*.ipa
