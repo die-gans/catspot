@@ -1,4 +1,4 @@
-package app.catspot.catspot_mobile
+package app.catspot.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
