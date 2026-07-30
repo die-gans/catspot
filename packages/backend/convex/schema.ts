@@ -9,7 +9,7 @@ import { v } from "convex/values";
  */
 export default defineSchema({
   users: defineTable({
-    clerkId: v.string(),
+    firebaseUid: v.string(),
     email: v.optional(v.string()),
     displayName: v.optional(v.string()),
     avatar: v.optional(v.string()),
@@ -30,7 +30,7 @@ export default defineSchema({
     createdAt: v.number(), // Unix ms
     deletedAt: v.optional(v.number()), // Unix ms, soft-delete
   })
-    .index("by_clerkId", ["clerkId"])
+    .index("by_firebaseUid", ["firebaseUid"])
     .index("by_email", ["email"]),
 
   keepsakes: defineTable({
