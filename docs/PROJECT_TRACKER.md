@@ -53,7 +53,7 @@ See `docs/PRD.md` for full technical blueprint.
 - [x] Pre-flight: install Flutter SDK (via FVM) — 2026-07-29 (FVM 4.1.2, Flutter 3.44.8, Dart 3.12.2; repo pinned via .fvmrc)
 - [ ] Pre-flight: role smoke tests for worker profiles
 - [ ] Project name finalization (Catspot is a placeholder)
-- [ ] **Sprint 1 STARTED 2026-07-29:** ✅ design system v1 (PR #1), ✅ scaffold S1.1 (PR #2), ✅ CI S1.2 (PR #3, green on main), ✅ S1.4 theme tokens (PR #4, CI-gated). In flight: V1/V2 code spike (convex+clerk Flutter wiring). Done: S1.5 backend schema v1 + auth (PR #5, CI green). ✅ Convex dev deployment live (amiable-egret-416) + schema v1 pushed — 2026-07-30. Firebase Auth swap CONFIRMED 2026-07-30 (Clerk dropped; BE swap in flight, MOB wrapper swap next; PR #6 on hold for pivot). iOS-first device validation (Apple Developer enrolment in progress)
+- [ ] **Sprint 1 STARTED 2026-07-29:** ✅ design system v1 (PR #1), ✅ scaffold S1.1 (PR #2), ✅ CI S1.2 (PR #3, green on main), ✅ S1.4 theme tokens (PR #4, CI-gated). ✅ V1/V2 convex + firebase auth wiring (PR #6). Firebase Auth swap COMPLETE 2026-07-30 (BE PR #7 + MOB PR #6, dev deployment on by_firebaseUid, project catspot-9ee0d). Next: bundle ID align (app.catspot.mobile) → FlutterFire configure → Codemagic iOS build. Apple Developer paid, awaiting activation
 
 ---
 
