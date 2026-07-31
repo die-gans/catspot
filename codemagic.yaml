@@ -39,13 +39,15 @@ workflows:
       - apps/mobile/build/app/outputs/flutter-apk/*.apk
 
   # ---------------------------------------------------------------------------
-  # DORMANT until Apple Developer Program activates + App Store Connect API key
-  # is added to Codemagic env group 'app_store_connect'.
+  # ACTIVE: iOS dev IPA workflow. App Store Connect integration (catspot_asc)
+  # is wired for automatic iOS signing; Apple Developer Portal assets are in place.
   # ---------------------------------------------------------------------------
   ios-dev-ipa:
     name: iOS Dev IPA
     instance_type: mac_mini_m1
     working_directory: apps/mobile
+    integrations:
+      app_store_connect: catspot_asc
     environment:
       flutter: fvm
       xcode: latest
@@ -61,9 +63,7 @@ workflows:
       ios_signing:
         distribution_type: development
         bundle_identifier: app.catspot.mobile
-    # No automatic triggers: manual only. This workflow remains dormant until
-    # Apple Developer Program activates and the app_store_connect env group is
-    # populated in Codemagic.
+    # Manual trigger only (ORC triggers via Codemagic API).
     cache:
       cache_paths:
         - $HOME/.pub-cache
