@@ -1,4 +1,5 @@
 # Catspot Codemagic build pipelines
+# This file must live at the repository root for Codemagic auto-detection.
 # See apps/mobile/docs/BUILDS.md for operating instructions.
 
 workflows:
@@ -26,7 +27,7 @@ workflows:
       - name: Build Android debug APK
         script: fvm flutter build apk --debug --dart-define=CONVEX_URL=$CONVEX_URL
     artifacts:
-      - build/app/outputs/flutter-apk/*.apk
+      - apps/mobile/build/app/outputs/flutter-apk/*.apk
 
   # ---------------------------------------------------------------------------
   # DORMANT until Apple Developer Program activates + App Store Connect API key
@@ -68,4 +69,4 @@ workflows:
       - name: Build iOS dev IPA
         script: fvm flutter build ipa --debug --dart-define=CONVEX_URL=$CONVEX_URL
     artifacts:
-      - build/ios/ipa/*.ipa
+      - apps/mobile/build/ios/ipa/*.ipa
