@@ -20,8 +20,17 @@ workflows:
     cache:
       cache_paths:
         - $HOME/.pub-cache
+        - $HOME/fvm
         - $CM_BUILD_DIR/apps/mobile/.dart_tool
     scripts:
+      - name: Install FVM and pinned Flutter
+        script: |
+          set -e
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew tap leoafarias/fvm
+          brew install fvm
+          cd $CM_BUILD_DIR
+          fvm install
       - name: Get Flutter packages
         script: fvm flutter pub get
       - name: Build Android debug APK
@@ -58,8 +67,17 @@ workflows:
     cache:
       cache_paths:
         - $HOME/.pub-cache
+        - $HOME/fvm
         - $CM_BUILD_DIR/apps/mobile/.dart_tool
     scripts:
+      - name: Install FVM and pinned Flutter
+        script: |
+          set -e
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew tap leoafarias/fvm
+          brew install fvm
+          cd $CM_BUILD_DIR
+          fvm install
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
       - name: Get Flutter packages
