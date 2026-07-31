@@ -1,6 +1,6 @@
 # Catspot mobile builds
 
-Build pipelines live in `apps/mobile/codemagic.yaml` and run on Codemagic's free macOS tier.
+Build pipelines live in `codemagic.yaml` at the repository root and run on Codemagic's free macOS tier.
 
 ## Android debug smoke build (runnable today)
 
