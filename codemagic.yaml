@@ -78,6 +78,8 @@ workflows:
           brew install fvm
           cd $CM_BUILD_DIR
           fvm install
+      - name: Precache iOS Flutter engine
+        script: fvm flutter precache --ios
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
       - name: Get Flutter packages
