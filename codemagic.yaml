@@ -54,6 +54,7 @@ workflows:
       cocoapods: default
       vars:
         CONVEX_URL: "https://amiable-egret-416.convex.cloud"
+        PATH: "$HOME/.cargo/bin:$PATH"
       groups:
         # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
         # APP_STORE_CONNECT_PRIVATE_KEY
@@ -70,6 +71,12 @@ workflows:
         - $HOME/fvm
         - $CM_BUILD_DIR/apps/mobile/.dart_tool
     scripts:
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
       - name: Install FVM and pinned Flutter
         script: |
           set -e
