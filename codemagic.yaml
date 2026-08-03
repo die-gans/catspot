@@ -51,7 +51,7 @@ workflows:
     environment:
       flutter: fvm
       xcode: latest
-      cocoapods: 15
+      cocoapods: default
       vars:
         CONVEX_URL: "https://amiable-egret-416.convex.cloud"
       groups:
