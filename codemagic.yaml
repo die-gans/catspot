@@ -156,7 +156,7 @@ workflows:
       - name: Build iOS release IPA
         script: |
           set -e
-          fvm flutter build ipa --release --verbose --build-number=$CM_BUILD_NUMBER --dart-define=CONVEX_URL=$CONVEX_URL 2>&1 | tail -400
+          fvm flutter build ipa --release --build-number=$CM_BUILD_NUMBER --dart-define=CONVEX_URL=$CONVEX_URL --export-options-plist=$HOME/export_options.plist
           ls build/ios/ipa/*.ipa
     artifacts:
       - build/ios/ipa/*.ipa
