@@ -57,6 +57,8 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **⚠️ BUILD 6a7145177fbdc82d3cc1ff05 (white-screen fix, PR #17) FAILED AT PUBLISHING 2026-08-04:** IPA built clean (no 'Encountered error', no export-options fallback), but App Store Connect rejected upload: `ENTITY_ERROR.ATTRIBUTE.INVALID.DUPLICATE` — "The bundle version must be higher than the previously uploaded version: '1.0.0'" (altool ExitFailure 31). Fix: bump CFBundleVersion (Codemagic `--build-number` not taking effect / re-run reused same number — use $CM_BUILD_NUMBER properly or $BUILD_NUMBER offset), re-trigger ios-testflight. INF card.
 
+**⚠️ BUILD 6a71f2f71830907d56d217f7 (scan pipeline, fe2df52) FAILED AT ARCHIVE 2026-08-04:** pbxproj path fix held (clean through pod install + 239s archive), but Swift compile error: `registrar(forPlugin:)` returns `(any FlutterPluginRegistrar)?` and was passed unwrapped to `CatDetectionPlugin.register(with:)` in AppDelegate.swift. Fixed in dab3b52 (if-let unwrap) → retriggered as build 6a727b14baa34a485ff09663.
+
 ## ✅ Also resolved (2026-08-04)
 
 - [x] **White screen on launch** — PR #17 (resilient startup + error surface) + d014b80 (build number from git commit count fixing duplicate bundle version on ASC upload). TestFlight pipeline clean.
