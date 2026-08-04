@@ -53,6 +53,8 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **✅ TESTFLIGHT LIVE 2026-08-04:** ios-testflight workflow green end-to-end (PRs #15–16 + export-options fix), IPA auto-submits to App Store Connect → TestFlight. Distribution cert `Y64Q7FZRD2` + "Catspot AppStore" profile `B34KP5FBXQ` (ASC API-created, uploaded to Codemagic identities as catspot_dist_cert / catspot_dist_profile). Signing/CI gotchas banked in skill `codemagic-flutter-ios-signing` (profile path mismatch, export-options-plist, exit-0 exports, DER CSRs).
 
+**✅ BUILD 6a713beccf2e79d451ace7f4 VERIFIED 2026-08-04:** ios-testflight green — IPA built clean (26.5MB, no export-options fallback), `UPLOAD SUCCEEDED with no errors` (delivery UUID eb1226c3), confirmed in App Store Connect API: v1.0.0, processing VALID. Remaining for Dan: export compliance + add himself as internal tester (ASC > TestFlight).
+
 ## 🔄 In Progress
 
 - [ ] **BUG: white screen on launch (TestFlight build, 2026-08-04)** — app installs via TestFlight but renders blank white. Suspects: Firebase init (GoogleService-Info.plist not in Runner target?), unhandled async error before first frame in release, or auth gate stuck awaiting Convex/Firebase. MOB card dispatched 2026-08-04.
