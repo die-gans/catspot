@@ -57,12 +57,26 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **⚠️ BUILD 6a7145177fbdc82d3cc1ff05 (white-screen fix, PR #17) FAILED AT PUBLISHING 2026-08-04:** IPA built clean (no 'Encountered error', no export-options fallback), but App Store Connect rejected upload: `ENTITY_ERROR.ATTRIBUTE.INVALID.DUPLICATE` — "The bundle version must be higher than the previously uploaded version: '1.0.0'" (altool ExitFailure 31). Fix: bump CFBundleVersion (Codemagic `--build-number` not taking effect / re-run reused same number — use $CM_BUILD_NUMBER properly or $BUILD_NUMBER offset), re-trigger ios-testflight. INF card.
 
+## ✅ Also resolved (2026-08-04)
+
+- [x] **White screen on launch** — PR #17 (resilient startup + error surface) + d014b80 (build number from git commit count fixing duplicate bundle version on ASC upload). TestFlight pipeline clean.
+- [x] **Project name** — confirmed as **Catspot**
+- [x] **Codemagic API / PR-review bot** — resolved
+
+## ✅ Auth screen shipped (2026-08-04)
+
+Apple Sign-In + Google Sign-In + email/password — all three wired via Firebase Auth. Branded sign-in screen uses design tokens (Quicksand wordmark, orange `#E86A33`, warm cream background). `SignInService` isolates all auth logic from the widget. Google Sign-In URL scheme added to Info.plist. CocoaPods integrated into xcconfigs + workspace. Local dev toolchain fully set up: Flutter 3.44.8, CocoaPods 1.17.0, Rust 1.97.1 (Cargokit requirement for convex_flutter), rustup with aarch64-apple-ios + aarch64-apple-ios-sim targets. App runs on physical device "Goose" (iPhone, iOS 26.5.2) and iPhone 17 simulator.
+
+**Local run command:**
+```bash
+cd apps/mobile
+export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
+flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiable-egret-416.convex.cloud
+```
+
 ## 🔄 In Progress
 
-- [ ] **BUG: white screen on launch (TestFlight build, 2026-08-04)** — fix shipped in PR #17 (readable error screen instead of white void), but TestFlight upload blocked by duplicate bundle version (see above). Waiting on re-upload, then Apple processing ~10–30 min.
-- [ ] Follow-up card: sign_in_with_apple + firebase_messaging Dart packages
-- [ ] Project name finalization (Catspot is a placeholder)
-- [ ] Codemagic API token held by ORC (secrets/codemagic.env); ASC API key AuthKey_5X3P73KZKS.p8 in same dir. PR-review bot: verdict BUILD — Dan said NO-GO for now
+None.
 
 ---
 
@@ -90,4 +104,4 @@ None.
 
 ---
 
-*Last updated: 2026-07-29*
+*Last updated: 2026-08-04*
