@@ -76,6 +76,9 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 ## 🔄 In Progress
 
+- [x] **Spike v2 scan pipeline CODE COMPLETE 2026-08-04 (PR #20):** iOS Vision MethodChannel (catspot/vision, VNRecognizeAnimalsRequest), scan debug screen at /debug/scan (bbox overlay, 2-frame capture gate), upload flow (scans:requestScan → R2 presigned PUT → scans:verify w/ Gemini 2.5 Flash structured verdict), scans table. Local verify: analyze clean, 10 tests pass, tsc clean. **NEXT: npx convex deploy to dev deployment (needs Convex access token — device login pending), then TestFlight build → field test G1-G5.**
+
+
 - Detection/AI spike rescoped to a skinny 2-week, no-training, no-dedup plan: `docs/planning/06-detection-spike-v2-skinny.md`.
 
 ---
