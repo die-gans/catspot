@@ -97,3 +97,69 @@ workflows:
         script: fvm flutter build ipa --debug --dart-define=CONVEX_URL=$CONVEX_URL
     artifacts:
       - apps/mobile/build/ios/ipa/*.ipa
+
+  # ---------------------------------------------------------------------------
+  # iOS TestFlight distribution workflow. Uses the catspot_asc App Store Connect
+  # integration for automatic distribution signing and TestFlight submission.
+  # ---------------------------------------------------------------------------
+  ios-testflight:
+    name: iOS TestFlight
+    instance_type: mac_mini_m1
+    working_directory: apps/mobile
+    integrations:
+      app_store_connect: catspot_asc
+    environment:
+      flutter: fvm
+      xcode: latest
+      cocoapods: default
+      vars:
+        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
+        PATH: "$HOME/.cargo/bin:$PATH"
+      groups:
+        # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
+        # APP_STORE_CONNECT_PRIVATE_KEY
+        - app_store_connect
+        # CERTIFICATE_PRIVATE_KEY
+        - certificate_credentials
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.catspot.mobile
+    # Manual trigger only (ORC triggers via Codemagic API).
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/fvm
+        - $CM_BUILD_DIR/apps/mobile/.dart_tool
+    scripts:
+      - name: Install Rust
+        script: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
+      - name: Install FVM and pinned Flutter
+        script: |
+          set -e
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew tap leoafarias/fvm
+          brew install fvm
+          cd $CM_BUILD_DIR
+          fvm install
+      - name: Precache iOS Flutter engine
+        script: fvm flutter precache --ios
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+      - name: Get Flutter packages
+        script: fvm flutter pub get
+      - name: Install CocoaPods
+        script: cd ios && pod install
+      - name: Build iOS release IPA
+        script: fvm flutter build ipa --release --dart-define=CONVEX_URL=$CONVEX_URL
+    artifacts:
+      - apps/mobile/build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        # Use the App Store Connect integration (catspot_asc) for authentication.
+        auth: integration
+        # Automatically submit the uploaded build to TestFlight beta review.
+        submit_to_testflight: true

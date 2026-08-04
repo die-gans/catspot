@@ -41,3 +41,20 @@ The **iOS Dev IPA** workflow is configured but intentionally dormant. Do **not**
 
 - `CONVEX_URL` is passed as a `--dart-define` in both workflows. The value is set in `codemagic.yaml` under `environment.vars`.
 - Caching is enabled for `$HOME/.pub-cache` and `apps/mobile/.dart_tool` to keep subsequent builds cheap.
+
+## iOS TestFlight (manual trigger)
+
+The **iOS TestFlight** workflow builds a release-signed IPA and publishes it to App Store Connect for TestFlight.
+
+1. Trigger it manually from the Codemagic dashboard, or via the Codemagic API (ORC path).
+2. The runner builds with `fvm flutter build ipa --release` and `xcode-project use-profiles`.
+3. The `catspot_asc` App Store Connect integration is used for both signing and publishing.
+   - Codemagic uses the integration to auto-generate the Apple Distribution certificate and App Store provisioning profile in the Apple Developer Portal.
+   - No manually uploaded distribution identities are required.
+4. After upload, Codemagic submits the build to TestFlight beta review (`submit_to_testflight: true`).
+
+### Prerequisites
+
+- App Store Connect integration `catspot_asc` is configured in Codemagic.
+- Bundle identifier `app.catspot.mobile` is registered in Apple Developer Portal.
+- App Store Connect app record exists for the bundle identifier.
