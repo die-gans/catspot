@@ -46,7 +46,10 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
       stream: _stream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return _AuthErrorShell(error: snapshot.error.toString(), onRetry: _retry);
+          return _AuthErrorShell(
+            error: snapshot.error.toString(),
+            onRetry: _retry,
+          );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _SplashShell();
@@ -76,7 +79,8 @@ class _SplashShell extends StatelessWidget {
           children: [
             Text(
               'Catspot',
-              style: tokens?.typography.displayLarge.copyWith(
+              style:
+                  tokens?.typography.displayLarge.copyWith(
                     color: tokens.colors.brandPrimary,
                   ) ??
                   const TextStyle(
@@ -86,9 +90,7 @@ class _SplashShell extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 24),
-            CircularProgressIndicator(
-              color: tokens?.colors.brandPrimary,
-            ),
+            CircularProgressIndicator(color: tokens?.colors.brandPrimary),
           ],
         ),
       ),
@@ -128,7 +130,8 @@ class _AuthErrorShell extends StatelessWidget {
               Text(
                 'Catspot',
                 textAlign: TextAlign.center,
-                style: tokens?.typography.displayLarge.copyWith(
+                style:
+                    tokens?.typography.displayLarge.copyWith(
                       color: tokens.colors.brandPrimary,
                     ) ??
                     const TextStyle(
@@ -141,24 +144,20 @@ class _AuthErrorShell extends StatelessWidget {
               Text(
                 'Could not check sign-in status',
                 textAlign: TextAlign.center,
-                style: tokens?.typography.title ??
-                    const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
+                style:
+                    tokens?.typography.title ??
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               SizedBox(height: tokens?.spacing.space3 ?? 12),
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: (tokens?.typography.body ?? const TextStyle())
-                    .copyWith(color: tokens?.colors.semanticError ?? Colors.red),
+                style: (tokens?.typography.body ?? const TextStyle()).copyWith(
+                  color: tokens?.colors.semanticError ?? Colors.red,
+                ),
               ),
               SizedBox(height: tokens?.spacing.space4 ?? 24),
-              ElevatedButton(
-                onPressed: onRetry,
-                child: const Text('Retry'),
-              ),
+              ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
             ],
           ),
         ),

@@ -6,11 +6,7 @@ import 'package:flutter/material.dart';
 /// on-device failures are diagnosable without a debugger. It is intentionally
 /// plain (no Catspot theme dependencies) because the theme may not have loaded.
 class StartupErrorApp extends StatelessWidget {
-  const StartupErrorApp({
-    required this.error,
-    this.stackTrace,
-    super.key,
-  });
+  const StartupErrorApp({required this.error, this.stackTrace, super.key});
 
   /// Human-readable startup error.
   final String error;
