@@ -118,4 +118,3 @@ class _HomePlaceholder extends StatelessWidget {
     );
   }
 }
-
