@@ -55,9 +55,11 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **✅ BUILD 6a713beccf2e79d451ace7f4 VERIFIED 2026-08-04:** ios-testflight green — IPA built clean (26.5MB, no export-options fallback), `UPLOAD SUCCEEDED with no errors` (delivery UUID eb1226c3), confirmed in App Store Connect API: v1.0.0, processing VALID. Remaining for Dan: export compliance + add himself as internal tester (ASC > TestFlight).
 
+**⚠️ BUILD 6a7145177fbdc82d3cc1ff05 (white-screen fix, PR #17) FAILED AT PUBLISHING 2026-08-04:** IPA built clean (no 'Encountered error', no export-options fallback), but App Store Connect rejected upload: `ENTITY_ERROR.ATTRIBUTE.INVALID.DUPLICATE` — "The bundle version must be higher than the previously uploaded version: '1.0.0'" (altool ExitFailure 31). Fix: bump CFBundleVersion (Codemagic `--build-number` not taking effect / re-run reused same number — use $CM_BUILD_NUMBER properly or $BUILD_NUMBER offset), re-trigger ios-testflight. INF card.
+
 ## 🔄 In Progress
 
-- [ ] **BUG: white screen on launch (TestFlight build, 2026-08-04)** — app installs via TestFlight but renders blank white. Suspects: Firebase init (GoogleService-Info.plist not in Runner target?), unhandled async error before first frame in release, or auth gate stuck awaiting Convex/Firebase. MOB card dispatched 2026-08-04.
+- [ ] **BUG: white screen on launch (TestFlight build, 2026-08-04)** — fix shipped in PR #17 (readable error screen instead of white void), but TestFlight upload blocked by duplicate bundle version (see above). Waiting on re-upload, then Apple processing ~10–30 min.
 - [ ] Follow-up card: sign_in_with_apple + firebase_messaging Dart packages
 - [ ] Project name finalization (Catspot is a placeholder)
 - [ ] Codemagic API token held by ORC (secrets/codemagic.env); ASC API key AuthKey_5X3P73KZKS.p8 in same dir. PR-review bot: verdict BUILD — Dan said NO-GO for now
