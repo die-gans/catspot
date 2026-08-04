@@ -78,6 +78,8 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 - [x] **Spike v2 scan pipeline CODE COMPLETE 2026-08-04 (PR #20):** iOS Vision MethodChannel (catspot/vision, VNRecognizeAnimalsRequest), scan debug screen at /debug/scan (bbox overlay, 2-frame capture gate), upload flow (scans:requestScan → R2 presigned PUT → scans:verify w/ Gemini 2.5 Flash structured verdict), scans table. Local verify: analyze clean, 10 tests pass, tsc clean. **NEXT: npx convex deploy to dev deployment (needs Convex access token — device login pending), then TestFlight build → field test G1-G5.**
 
+**❌ BUILD 6a71943397d5b9ed6b314dbf (PR #20 scan pipeline) FAILED 2026-08-04:** All steps green until "Build iOS release IPA" — Swift Compiler Error: `Cannot find 'CatDetectionPlugin' in scope` at `apps/mobile/ios/Runner/AppDelegate.swift:14:4` (Xcode archive otherwise done, 92.7s). Plugin class not exposed to Runner target — card for catspot-mobile: verify CatDetectionPlugin registration (missing/renamed Swift class, missing plugin registrant, or pod not declaring public class); check plugin_name in pubspec vs ios/Classes class name.
+
 
 - Detection/AI spike rescoped to a skinny 2-week, no-training, no-dedup plan: `docs/planning/06-detection-spike-v2-skinny.md`.
 
