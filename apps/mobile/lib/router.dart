@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'core/firebase/firebase_auth_gate.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/debug/validation_screen.dart';
+import 'features/scan/scan_screen.dart';
 
 /// Notifies [GoRouter] when Firebase auth state changes so redirects re-evaluate.
 class _AuthNotifier extends ChangeNotifier {
@@ -70,6 +71,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/debug/validation',
       builder: (context, state) => const ValidationScreen(),
+    ),
+    GoRoute(
+      path: '/debug/scan',
+      builder: (context, state) => const ScanScreen(),
     ),
   ],
   redirect: (context, state) {
