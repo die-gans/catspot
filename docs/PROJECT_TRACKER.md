@@ -78,7 +78,9 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 - [x] **Spike v2 scan pipeline CODE COMPLETE 2026-08-04 (PR #20):** iOS Vision MethodChannel (catspot/vision, VNRecognizeAnimalsRequest), scan debug screen at /debug/scan (bbox overlay, 2-frame capture gate), upload flow (scans:requestScan → R2 presigned PUT → scans:verify w/ Gemini 2.5 Flash structured verdict), scans table. Local verify: analyze clean, 10 tests pass, tsc clean. **NEXT: npx convex deploy to dev deployment (needs Convex access token — device login pending), then TestFlight build → field test G1-G5.**
 
-**❌ BUILD 6a71943397d5b9ed6b314dbf (PR #20 scan pipeline) FAILED 2026-08-04:** All steps green until "Build iOS release IPA" — Swift Compiler Error: `Cannot find 'CatDetectionPlugin' in scope` at `apps/mobile/ios/Runner/AppDelegate.swift:14:4` (Xcode archive otherwise done, 92.7s). Plugin class not exposed to Runner target — card for catspot-mobile: verify CatDetectionPlugin registration (missing/renamed Swift class, missing plugin registrant, or pod not declaring public class); check plugin_name in pubspec vs ios/Classes class name.
+**❌ BUILD 6a71943397d5b9ed6b314dbf (PR #20 scan pipeline) FAILED 2026-08-04:** All steps green until "Build iOS release IPA" — Swift Compiler Error: `Cannot find 'CatDetectionPlugin' in scope` at `apps/mobile/ios/Runner/AppDelegate.swift:14:4` (Xcode archive otherwise done, 92.7s).
+
+**❌ BUILD 6a719950338653a25a194799 (d3ee525 pbxproj fix) FAILED 2026-08-04:** Archive done (102s) but `Error (Xcode): Build input file cannot be found: .../ios/Runner/Runner/CatDetectionPlugin.swift` — the d3ee525 fileRef set path=`Runner/CatDetectionPlugin.swift` inside the Runner group (path=Runner) → double `Runner/Runner`. **ORC fixed and pushed as fe2df52:** fileRef path now `CatDetectionPlugin.swift` relative to Runner group. Rebuild pending → then Dan field-tests via /debug/scan.
 
 
 - Detection/AI spike rescoped to a skinny 2-week, no-training, no-dedup plan: `docs/planning/06-detection-spike-v2-skinny.md`.
