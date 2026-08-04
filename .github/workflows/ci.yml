@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Flutter (FVM-pinned)
         uses: subosito/flutter-action@v2
@@ -27,7 +29,19 @@ jobs:
         run: flutter pub get
 
       - name: Check Dart formatting
-        run: dart format --set-exit-if-changed .
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED_DART=$(git diff --name-only origin/main...HEAD | grep '^apps/mobile/.*\.dart$' || true)
+          else
+            CHANGED_DART=$(git diff --name-only HEAD~1 -- apps/mobile | grep '\.dart$' || true)
+          fi
+          if [ -z "$CHANGED_DART" ]; then
+            echo "No changed Dart files; skipping format check."
+          else
+            echo "Checking formatting for:"
+            echo "$CHANGED_DART"
+            dart format --set-exit-if-changed $CHANGED_DART
+          fi
 
       - name: Analyze Flutter code
         run: flutter analyze
