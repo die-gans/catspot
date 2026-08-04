@@ -96,7 +96,7 @@ workflows:
       - name: Build iOS dev IPA
         script: fvm flutter build ipa --debug --dart-define=CONVEX_URL=$CONVEX_URL
     artifacts:
-      - apps/mobile/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
 
   # ---------------------------------------------------------------------------
   # iOS TestFlight distribution workflow. Uses the catspot_asc App Store Connect
@@ -154,9 +154,12 @@ workflows:
       - name: Install CocoaPods
         script: cd ios && pod install
       - name: Build iOS release IPA
-        script: fvm flutter build ipa --release --dart-define=CONVEX_URL=$CONVEX_URL
+        script: |
+          set -e
+          fvm flutter build ipa --release --build-number=$CM_BUILD_NUMBER --dart-define=CONVEX_URL=$CONVEX_URL
+          ls build/ios/ipa/*.ipa
     artifacts:
-      - apps/mobile/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
     publishing:
       app_store_connect:
         # Use the App Store Connect integration (catspot_asc) for authentication.
