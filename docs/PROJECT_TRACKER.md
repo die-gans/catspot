@@ -80,7 +80,7 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 **❌ BUILD 6a71943397d5b9ed6b314dbf (PR #20 scan pipeline) FAILED 2026-08-04:** All steps green until "Build iOS release IPA" — Swift Compiler Error: `Cannot find 'CatDetectionPlugin' in scope` at `apps/mobile/ios/Runner/AppDelegate.swift:14:4` (Xcode archive otherwise done, 92.7s).
 
-**❌ BUILD 6a719950338653a25a194799 (d3ee525 pbxproj fix) FAILED 2026-08-04:** Archive done (102s) but `Error (Xcode): Build input file cannot be found: .../ios/Runner/Runner/CatDetectionPlugin.swift` — the d3ee525 fileRef set path=`Runner/CatDetectionPlugin.swift` inside the Runner group (path=Runner) → double `Runner/Runner`. **ORC fixed and pushed as fe2df52:** fileRef path now `CatDetectionPlugin.swift` relative to Runner group. Rebuild pending → then Dan field-tests via /debug/scan.
+**⏳ BUILD 6a71f2f71830907d56d217f7 (fe2df52 pbxproj re-fix) BUILDING 2026-08-05:** All pre-steps green (fetch, FVM, pods, signing) — currently at "Build iOS release IPA". Last build failed on `Runner/Runner/CatDetectionPlugin.swift`; fe2df52 sets fileRef path `CatDetectionPlugin.swift`. Awaiting archive + publish.
 
 
 - Detection/AI spike rescoped to a skinny 2-week, no-training, no-dedup plan: `docs/planning/06-detection-spike-v2-skinny.md`.
