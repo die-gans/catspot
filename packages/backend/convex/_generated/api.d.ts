@@ -11,6 +11,7 @@
 import type * as http from "../http.js";
 import type * as lib_r2 from "../lib/r2.js";
 import type * as lib_vision from "../lib/vision.js";
+import type * as scans from "../scans.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,6 +24,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/r2": typeof lib_r2;
   "lib/vision": typeof lib_vision;
+  scans: typeof scans;
   users: typeof users;
 }>;
 

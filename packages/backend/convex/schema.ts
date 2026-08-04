@@ -64,14 +64,21 @@ export default defineSchema({
 
   scans: defineTable({
     userId: v.id("users"),
-    status: v.string(), // pending | verifying | accepted | rejected | duplicate
-    imageUrl: v.string(),
+    status: v.union(
+      v.literal("awaiting_upload"),
+      v.literal("verified"),
+      v.literal("rejected"),
+      v.literal("error")
+    ),
+    r2Key: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
     phash: v.optional(v.string()),
     verdict: v.optional(
       v.object({
-        isRealCat: v.boolean(),
-        isLivePhoto: v.boolean(),
+        is_real_cat: v.boolean(),
+        is_live_photo: v.boolean(),
         confidence: v.number(),
+        reject_reason: v.union(v.string(), v.null()),
       })
     ),
     geo: v.optional(
@@ -88,9 +95,11 @@ export default defineSchema({
       })
     ),
     rejectionReason: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
     createdAt: v.number(),
+    verifiedAt: v.optional(v.number()),
   })
-    .index("by_user", ["userId"])
+    .index("by_userId", ["userId"])
     .index("by_user_status", ["userId", "status"])
     .index("by_phash", ["phash"]),
 

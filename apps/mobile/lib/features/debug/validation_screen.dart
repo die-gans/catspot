@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/convex/catspot_convex_client.dart';
 import '../../core/firebase/firebase_token_bridge.dart';
@@ -98,6 +99,11 @@ class _ValidationScreenState extends State<ValidationScreen> {
           ElevatedButton(
             onPressed: () => setState(_poll),
             child: const Text('Refresh'),
+          ),
+          SizedBox(height: tokens.spacing.space4),
+          ElevatedButton(
+            onPressed: () => context.push('/debug/scan'),
+            child: const Text('Open Scan Debug'),
           ),
         ],
       ),
