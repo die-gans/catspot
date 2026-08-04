@@ -76,7 +76,7 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 ## 🔄 In Progress
 
-None.
+- Detection/AI spike rescoped to a skinny 2-week, no-training, no-dedup plan: `docs/planning/06-detection-spike-v2-skinny.md`.
 
 ---
 
