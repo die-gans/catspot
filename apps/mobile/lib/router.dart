@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/firebase/firebase_auth_gate.dart';
-import 'core/theme/theme.dart';
+import 'features/auth/sign_in_screen.dart';
 import 'features/debug/validation_screen.dart';
 
 /// Notifies [GoRouter] when Firebase auth state changes so redirects re-evaluate.
@@ -65,7 +65,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/sign-in',
-      builder: (context, state) => const _SignInScreen(),
+      builder: (context, state) => const SignInScreen(),
     ),
     GoRoute(
       path: '/debug/validation',
@@ -104,108 +104,18 @@ class _HomePlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Catspot')),
+      appBar: AppBar(
+        title: const Text('Catspot'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign out',
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          ),
+        ],
+      ),
       body: const Center(child: Text('Home')),
     );
   }
 }
 
-/// Sign-in screen rendered by the `/sign-in` route.
-///
-/// Minimal email + password form backed by Firebase Auth. Apple/Google SSO
-/// buttons are deferred to a later platform-configuration card.
-class _SignInScreen extends StatefulWidget {
-  const _SignInScreen();
-
-  @override
-  State<_SignInScreen> createState() => _SignInScreenState();
-}
-
-class _SignInScreenState extends State<_SignInScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isSignUp = false;
-  String? _error;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    setState(() {
-      _error = null;
-      _busy = true;
-    });
-    try {
-      final auth = FirebaseAuth.instance;
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
-      if (_isSignUp) {
-        await auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-      } else {
-        await auth.signInWithEmailAndPassword(email: email, password: password);
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() => _error = e.message ?? e.code);
-    } on Exception catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = Theme.of(context).extension<CatspotTokens>();
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sign in to Catspot')),
-      body: Padding(
-        padding: EdgeInsets.all(tokens?.spacing.space4 ?? 16),
-        child: ListView(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-            ),
-            SizedBox(height: tokens?.spacing.space3 ?? 12),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: tokens?.spacing.space3 ?? 12),
-            if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: Colors.red)),
-              SizedBox(height: tokens?.spacing.space3 ?? 12),
-            ],
-            ElevatedButton(
-              onPressed: _busy ? null : _submit,
-              child: Text(_isSignUp ? 'Create account' : 'Sign in'),
-            ),
-            TextButton(
-              onPressed: _busy
-                  ? null
-                  : () => setState(() => _isSignUp = !_isSignUp),
-              child: Text(
-                _isSignUp
-                    ? 'Already have an account? Sign in'
-                    : 'Create account',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
