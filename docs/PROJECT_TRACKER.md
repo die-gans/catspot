@@ -80,6 +80,8 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 ## 🔄 In Progress
 
+- [ ] **🔥 CONVEX → FIREBASE MIGRATION STARTED 2026-08-05** — plan: `docs/planning/07-convex-to-firebase-migration.md`. Infra done by ORC: Blaze billing linked (acct 011996-F3A856-B315CC), APIs enabled (firestore/functions/cloudbuild/run/artifactregistry/scheduler), Firestore `(default)` DB created in us-central1 (closed rules). Phase 1 cards dispatched: BE (Cloud Functions requestScan/verifyScan + rules + deploy, frozen contract) + MOB (transport swap, remove convex_flutter/Rust). Merge order: BE first. Phase 2 (users collection, delete token bridge) + Phase 3 (remaining schema, Convex teardown) pending.
+
 - [x] **Spike v2 scan pipeline CODE COMPLETE 2026-08-04 (PR #20):** iOS Vision MethodChannel (catspot/vision, VNRecognizeAnimalsRequest), scan debug screen at /debug/scan (bbox overlay, 2-frame capture gate), upload flow (scans:requestScan → R2 presigned PUT → scans:verify w/ Gemini 2.5 Flash structured verdict), scans table. Local verify: analyze clean, 10 tests pass, tsc clean. **NEXT: npx convex deploy to dev deployment (needs Convex access token — device login pending), then TestFlight build → field test G1-G5.**
 
 **❌ BUILD 6a71943397d5b9ed6b314dbf (PR #20 scan pipeline) FAILED 2026-08-04:** All steps green until "Build iOS release IPA" — Swift Compiler Error: `Cannot find 'CatDetectionPlugin' in scope` at `apps/mobile/ios/Runner/AppDelegate.swift:14:4` (Xcode archive otherwise done, 92.7s).
