@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import '../../core/functions/functions_providers.dart';
 import 'cat_detection_service.dart';
 import 'scan_controller.dart';
 import 'scan_verifier.dart';
@@ -18,7 +19,8 @@ final catDetectionServiceProvider = Provider<CatDetectionService>(
 /// Backend verifier for the capture flow.
 final scanVerifierProvider = Provider<ScanVerifier>((ref) {
   final client = ref.watch(httpClientProvider);
-  return ConvexScanVerifier(httpClient: client);
+  final functions = ref.watch(catspotFunctionsProvider);
+  return BackendScanVerifier(functions: functions, httpClient: client);
 });
 
 /// State controller for the scan debug screen.

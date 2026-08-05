@@ -10,7 +10,7 @@ Build pipelines live in `codemagic.yaml` at the repository root and run on Codem
 4. The runner:
    - Uses FVM and the Flutter version pinned in `.fvmrc` at repo root.
    - Runs `fvm flutter pub get`.
-   - Runs `fvm flutter build apk --debug --dart-define=CONVEX_URL=...`.
+   - Runs `fvm flutter build apk --debug`.
 5. When the build finishes, download the APK from:
    - `build/app/outputs/flutter-apk/*.apk` under the build artifacts.
 
@@ -39,7 +39,7 @@ The **iOS Dev IPA** workflow is configured but intentionally dormant. Do **not**
 
 ## Notes
 
-- `CONVEX_URL` is passed as a `--dart-define` in both workflows. The value is set in `codemagic.yaml` under `environment.vars`.
+- No extra backend URL dart-define is needed; Firebase configuration is bundled at build time via `firebase_options.dart` and Google Services config files.
 - Caching is enabled for `$HOME/.pub-cache` and `apps/mobile/.dart_tool` to keep subsequent builds cheap.
 
 ## iOS TestFlight (manual trigger)

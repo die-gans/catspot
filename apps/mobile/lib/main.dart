@@ -1,5 +1,4 @@
 import 'package:catspot_mobile/app.dart';
-import 'package:catspot_mobile/core/convex/catspot_convex_client.dart';
 import 'package:catspot_mobile/core/startup/startup_error.dart';
 import 'package:catspot_mobile/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,17 +20,6 @@ void main() async {
   } catch (e, st) {
     startupError = 'Firebase initialization failed: $e';
     startupStackTrace = st;
-  }
-
-  // Convex is best-effort: a missing CONVEX_URL or network failure should
-  // never block the first frame. The app will start without Convex and surface
-  // the degraded state on the validation screen.
-  if (startupError == null) {
-    try {
-      await CatspotConvexClient.initialize();
-    } catch (e, st) {
-      debugPrint('Convex initialization failed (non-fatal): $e\n$st');
-    }
   }
 
   // Always call runApp, even when startup partially fails. A visible error

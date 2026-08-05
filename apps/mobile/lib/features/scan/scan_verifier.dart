@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
-import '../../core/convex/catspot_convex_client.dart';
+import '../../core/functions/scan_functions.dart';
 
-/// Result of calling [ScanVerifier.requestScan] and uploading the photo.
+/// Result of calling [ScanVerifier.captureAndVerify] and uploading the photo.
 sealed class ScanResult {
   /// Human-readable message suitable for a snack bar or status line.
   String get message;
@@ -47,9 +46,6 @@ final class ScanFailed extends ScanResult {
   String get message => 'Error: $error';
 }
 
-/// Verdict returned by the `scans:verify` Convex action.
-typedef ScanVerdict = ({bool isRealCat, bool isLivePhoto, double confidence, String? rejectReason});
-
 /// Backend contract for the scan capture + verify flow.
 abstract interface class ScanVerifier {
   /// Request a scan slot and upload the captured [imageBytes], then verify.
@@ -59,12 +55,16 @@ abstract interface class ScanVerifier {
   Future<ScanResult> captureAndVerify(Uint8List imageBytes);
 }
 
-/// Live verifier that calls Convex actions and uploads directly to R2.
-final class ConvexScanVerifier implements ScanVerifier {
+/// Live verifier that calls backend functions and uploads directly to R2.
+final class BackendScanVerifier implements ScanVerifier {
   /// Create the live verifier.
-  const ConvexScanVerifier({
+  const BackendScanVerifier({
+    required this.functions,
     required this.httpClient,
   });
+
+  /// Backend functions seam; transport-agnostic by design.
+  final CatspotFunctions functions;
 
   /// HTTP client used for the direct R2 PUT upload.
   final http.Client httpClient;
@@ -72,16 +72,10 @@ final class ConvexScanVerifier implements ScanVerifier {
   @override
   Future<ScanResult> captureAndVerify(Uint8List imageBytes) async {
     try {
-      final requestResponse = await CatspotConvexClient.action(
-        'scans:requestScan',
-        const {},
-      );
-      final requestData = jsonDecode(requestResponse) as Map<String, dynamic>;
-      final scanId = requestData['scanId'] as String;
-      final uploadUrl = requestData['uploadUrl'] as String;
+      final request = await functions.requestScan();
 
       final upload = await httpClient.put(
-        Uri.parse(uploadUrl),
+        Uri.parse(request.uploadUrl),
         body: imageBytes,
         headers: const {'Content-Type': 'image/jpeg'},
       );
@@ -92,22 +86,12 @@ final class ConvexScanVerifier implements ScanVerifier {
         );
       }
 
-      final verifyResponse = await CatspotConvexClient.action(
-        'scans:verify',
-        {'scanId': scanId},
-      );
-      final verifyData = jsonDecode(verifyResponse) as Map<String, dynamic>;
-      final verdict = verifyData['verdict'] as Map<String, dynamic>;
+      final verdict = await functions.verifyScan(request.scanId);
 
-      final isRealCat = verdict['is_real_cat'] as bool;
-      final isLivePhoto = verdict['is_live_photo'] as bool;
-      final confidence = (verdict['confidence'] as num).toDouble();
-      final rejectReason = verdict['reject_reason'] as String?;
-
-      if (isRealCat && isLivePhoto) {
-        return ScanApproved(confidence: confidence);
+      if (verdict.isRealCat && verdict.isLivePhoto) {
+        return ScanApproved(confidence: verdict.confidence);
       }
-      return ScanRejected(reason: rejectReason ?? 'Not a real live cat photo');
+      return ScanRejected(reason: verdict.rejectReason ?? 'Not a real live cat photo');
     } on Exception catch (e, st) {
       return ScanFailed(error: '$e\n$st');
     }
