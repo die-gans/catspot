@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:catspot_mobile/core/firebase/firebase_auth_gate.dart';
+import 'package:catspot_mobile/core/firebase/user_service.dart';
 import 'package:catspot_mobile/core/startup/startup_error.dart';
 import 'package:catspot_mobile/core/theme/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,6 +41,7 @@ void main() {
             home: FirebaseAuthGate(
               home: const Text('HOME'),
               authStateChanges: controller.stream,
+              userService: _FakeUserService(),
             ),
           ),
         );
@@ -62,6 +64,7 @@ void main() {
             home: FirebaseAuthGate(
               home: const Text('HOME'),
               authStateChanges: controller.stream,
+              userService: _FakeUserService(),
             ),
           ),
         );
@@ -71,6 +74,33 @@ void main() {
         await tester.pump();
 
         expect(find.text('HOME'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'ensures the user document when auth stream emits a signed-in user',
+      (WidgetTester tester) async {
+        final controller = StreamController<User?>();
+        addTearDown(controller.close);
+        final fakeService = _FakeUserService();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: FirebaseAuthGate(
+              home: const Text('HOME'),
+              authStateChanges: controller.stream,
+              userService: fakeService,
+            ),
+          ),
+        );
+
+        final user = _FakeUser();
+        controller.add(user);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+
+        expect(find.text('HOME'), findsOneWidget);
+        expect(fakeService.calls, [(uid: user.uid, email: user.email)]);
       },
     );
 
@@ -85,6 +115,7 @@ void main() {
             home: FirebaseAuthGate(
               home: const Text('HOME'),
               authStateChanges: controller.stream,
+              userService: _FakeUserService(),
             ),
           ),
         );
@@ -113,6 +144,7 @@ void main() {
             home: FirebaseAuthGate(
               home: const Text('HOME'),
               authStateChanges: controller.stream,
+              userService: _FakeUserService(),
             ),
           ),
         );
@@ -182,4 +214,17 @@ class _FakeUser extends Fake implements User {
 
   @override
   String get uid => 'fake-uid';
+}
+
+class _FakeUserService implements UserService {
+  final calls = <({String uid, String? email})>[];
+
+  @override
+  Future<bool> ensureUserDoc(User user) async {
+    calls.add((uid: user.uid, email: user.email));
+    return true;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

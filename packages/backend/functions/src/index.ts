@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { user } from "firebase-functions/v1/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getObjectBytes, getPublicUrl, getSignedUploadUrl } from "./r2.js";
 import { callGemini, type Verdict } from "./vision.js";
@@ -7,6 +8,29 @@ import { callGemini, type Verdict } from "./vision.js";
 initializeApp();
 
 const db = getFirestore();
+
+/**
+ * Seed a user document when a new Firebase Auth account is created.
+ *
+ * Uses the v1 auth trigger because plain Firebase Auth onCreate is not
+ * supported by the v2 API without GCIP identity blocking functions.
+ */
+export const seedUser = user().onCreate(async (user) => {
+  const { uid, email, displayName, photoURL } = user;
+
+  await db
+    .collection("users")
+    .doc(uid)
+    .set({
+      uid,
+      email: email ?? null,
+      displayName: displayName ?? null,
+      photoURL: photoURL ?? null,
+      xp: 0,
+      coins: 0,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+});
 
 /**
  * Request a new scan upload.
