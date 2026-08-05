@@ -1,0 +1,11 @@
+# Firebase Cloud Functions build artifacts
+lib/
+*.log
+.firebase/
+
+# Secrets — never commit
+.env
+.env.*
+
+# Dependencies
+node_modules/
