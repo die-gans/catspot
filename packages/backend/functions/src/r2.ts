@@ -50,6 +50,16 @@ export async function getSignedUploadUrl(
 }
 
 /**
+ * Build a public URL for an R2 object.
+ *
+ * Requires `R2_PUBLIC_URL` env var (e.g. `https://cdn.catspot.app`).
+ */
+export function getPublicUrl(key: string): string {
+  const base = requireEnv("R2_PUBLIC_URL").replace(/\/$/, "");
+  return `${base}/${key}`;
+}
+
+/**
  * Fetch an object's bytes from R2.
  *
  * Used by server-side functions (e.g. Gemini verification) that need the
