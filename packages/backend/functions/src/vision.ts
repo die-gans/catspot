@@ -15,7 +15,7 @@ export interface Verdict {
   reject_reason: string | null;
 }
 
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const VERDICT_PROMPT = `You are the image verifier for a real-world cat spotting game.

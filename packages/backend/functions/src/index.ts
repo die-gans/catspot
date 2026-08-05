@@ -119,7 +119,7 @@ export const verifyScan = onCall(
 // Keepsake functions
 // ---------------------------------------------------------------------------
 
-const GEMINI_MODEL_NAME = "gemini-2.5-flash";
+const GEMINI_MODEL_NAME = "gemini-3.1-flash-lite";
 const GEMINI_NAME_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent`;
 
 const NAME_PROMPT = `You are naming a cat in a real-world cat-spotting mobile game.
