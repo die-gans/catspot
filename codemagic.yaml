@@ -156,7 +156,13 @@ workflows:
       - name: Build iOS release IPA
         script: |
           set -e
-          fvm flutter build ipa --release --build-number=$(git rev-list --count HEAD) --dart-define=CONVEX_URL=$CONVEX_URL --export-options-plist=$HOME/export_options.plist
+          # Build number must be STRICTLY INCREASING per ASC upload. git commit count alone
+          # duplicates on rebuilt commits; CM_BUILD_NUMBER is monotonic but has been observed
+          # EMPTY in yaml workflows — so: 1000 offset + (CM_BUILD_NUMBER, falling back to
+          # commit count). Always >1000, always above the commit-count-era uploads (<100).
+          BUILD_NUMBER=$((1000 + ${CM_BUILD_NUMBER:-$(git rev-list --count HEAD)}))
+          echo "Using build number: $BUILD_NUMBER"
+          fvm flutter build ipa --release --build-number=$BUILD_NUMBER --dart-define=CONVEX_URL=$CONVEX_URL --export-options-plist=$HOME/export_options.plist
           ls build/ios/ipa/*.ipa
     artifacts:
       - build/ios/ipa/*.ipa
