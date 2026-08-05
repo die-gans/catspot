@@ -81,8 +81,6 @@ jobs:
             echo "Backend skeleton: no tsconfig.json yet. Typecheck/lint deferred to S2 backend implementation."
           fi
 
-      - name: Install & typecheck Firebase Functions package
+      - name: Typecheck Firebase Functions package
         working-directory: packages/backend/functions
-        run: |
-          pnpm install
-          pnpm run typecheck
+        run: pnpm run typecheck
