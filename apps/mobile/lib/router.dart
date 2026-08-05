@@ -11,6 +11,8 @@ import 'features/debug/validation_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/scan/scan_screen.dart';
 
+const _startupTag = '[catspot-startup]';
+
 /// Notifies [GoRouter] when Firebase auth state changes so redirects re-evaluate.
 class _AuthNotifier extends ChangeNotifier {
   _AuthNotifier([Stream<bool?>? stream]) {
@@ -53,6 +55,21 @@ void bindFirebaseAuthNotifier() {
   }
 }
 
+/// Logs the first route that is actually built/pushed so we can verify the
+/// router reached a frame in release logs.
+class _StartupRouteObserver extends NavigatorObserver {
+  bool _firstRouteLogged = false;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    if (!_firstRouteLogged) {
+      _firstRouteLogged = true;
+      debugPrint('$_startupTag first route built: ${route.settings.name ?? route.toString()}');
+    }
+  }
+}
+
 /// App router.
 ///
 /// Redirects enforce the Firebase auth gate: signed-out users land on
@@ -60,6 +77,7 @@ void bindFirebaseAuthNotifier() {
 final GoRouter router = GoRouter(
   initialLocation: '/',
   refreshListenable: _authNotifier,
+  observers: [_StartupRouteObserver()],
   routes: [
     GoRoute(
       path: '/',
@@ -111,4 +129,3 @@ bool _firebaseSignedIn() {
     return false;
   }
 }
-

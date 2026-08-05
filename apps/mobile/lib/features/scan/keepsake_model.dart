@@ -10,12 +10,6 @@ class Keepsake {
     required this.createdAt,
   });
 
-  final String id;
-  final String name;
-  final String cutoutUrl;
-  final String serialNumber;
-  final DateTime createdAt;
-
   factory Keepsake.fromJson(Map<String, dynamic> json) {
     return Keepsake(
       id: json['_id'] as String,
@@ -27,6 +21,12 @@ class Keepsake {
       ),
     );
   }
+
+  final String id;
+  final String name;
+  final String cutoutUrl;
+  final String serialNumber;
+  final DateTime createdAt;
 
   Map<String, dynamic> toJson() => {
         '_id': id,
