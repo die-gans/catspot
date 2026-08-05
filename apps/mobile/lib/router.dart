@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import 'core/firebase/firebase_auth_gate.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/collection/collection_screen.dart';
 import 'features/debug/validation_screen.dart';
+import 'features/home/home_screen.dart';
 import 'features/scan/scan_screen.dart';
 
 /// Notifies [GoRouter] when Firebase auth state changes so redirects re-evaluate.
@@ -62,11 +64,19 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) =>
-          const FirebaseAuthGate(home: _HomePlaceholder()),
+          const FirebaseAuthGate(home: HomeScreen()),
+    ),
+    GoRoute(
+      path: '/scan',
+      builder: (context, state) => const ScanScreen(),
     ),
     GoRoute(
       path: '/sign-in',
       builder: (context, state) => const SignInScreen(),
+    ),
+    GoRoute(
+      path: '/collection',
+      builder: (context, state) => const CollectionScreen(),
     ),
     GoRoute(
       path: '/debug/validation',
@@ -102,24 +112,3 @@ bool _firebaseSignedIn() {
   }
 }
 
-/// Home placeholder shown once the user is authenticated.
-class _HomePlaceholder extends StatelessWidget {
-  const _HomePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catspot'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () => FirebaseAuth.instance.signOut(),
-          ),
-        ],
-      ),
-      body: const Center(child: Text('Home')),
-    );
-  }
-}

@@ -37,6 +37,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Catspot uses the camera to spot and scan cats in the real world.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Catspot saves your cat stickers to Photos.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

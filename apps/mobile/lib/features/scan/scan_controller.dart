@@ -1,18 +1,14 @@
-import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'cat_detection_gate.dart';
 import 'cat_detection_models.dart';
 import 'cat_detection_service.dart';
-import 'scan_verifier.dart';
+import 'keepsake_model.dart';
+import 'keepsake_service.dart';
 
-/// Mutable state of the scan debug screen.
 @immutable
 class ScanState {
-  /// Create a scan state.
   const ScanState({
     this.controller,
     this.isInitializing = true,
@@ -20,31 +16,37 @@ class ScanState {
     this.detections = const [],
     this.isCaptureEnabled = false,
     this.isCapturing = false,
-    this.lastResult,
+    this.capturedBytes,
+    this.isIsolating = false,
+    this.isolatedBytes,
+    this.isCreatingKeepsake = false,
+    this.keepsake,
   });
 
-  /// Active camera controller, once initialized.
   final CameraController? controller;
-
-  /// Whether the camera is still initializing.
   final bool isInitializing;
-
-  /// Fatal or non-fatal error to display.
   final String? error;
-
-  /// Detections from the most recent frame.
   final List<CatDetection> detections;
-
-  /// Whether the shutter button is enabled (stable cat detection).
   final bool isCaptureEnabled;
 
-  /// Whether a full-res capture + verify is in flight.
+  /// Taking picture + running on-device detection.
   final bool isCapturing;
 
-  /// Most recent backend result message, if any.
-  final ScanResult? lastResult;
+  /// Frozen JPEG shown in place of the live preview after shutter.
+  final Uint8List? capturedBytes;
 
-  /// Copy the state with the given fields replaced.
+  /// Background removal is in flight.
+  final bool isIsolating;
+
+  /// Cat-only PNG with transparent background — the sticker.
+  final Uint8List? isolatedBytes;
+
+  /// R2 upload + Convex create + Photos save is in flight.
+  final bool isCreatingKeepsake;
+
+  /// Set once the keepsake is created; triggers the catch result screen.
+  final Keepsake? keepsake;
+
   ScanState copyWith({
     CameraController? controller,
     bool? isInitializing,
@@ -52,8 +54,15 @@ class ScanState {
     List<CatDetection>? detections,
     bool? isCaptureEnabled,
     bool? isCapturing,
-    ScanResult? lastResult,
+    Uint8List? capturedBytes,
+    bool? isIsolating,
+    Uint8List? isolatedBytes,
+    bool? isCreatingKeepsake,
+    Keepsake? keepsake,
     bool clearError = false,
+    bool clearCaptured = false,
+    bool clearIsolated = false,
+    bool clearKeepsake = false,
   }) {
     return ScanState(
       controller: controller ?? this.controller,
@@ -62,42 +71,29 @@ class ScanState {
       detections: detections ?? this.detections,
       isCaptureEnabled: isCaptureEnabled ?? this.isCaptureEnabled,
       isCapturing: isCapturing ?? this.isCapturing,
-      lastResult: lastResult ?? this.lastResult,
+      capturedBytes: clearCaptured ? null : capturedBytes ?? this.capturedBytes,
+      isIsolating: isIsolating ?? this.isIsolating,
+      isolatedBytes: clearIsolated ? null : isolatedBytes ?? this.isolatedBytes,
+      isCreatingKeepsake: isCreatingKeepsake ?? this.isCreatingKeepsake,
+      keepsake: clearKeepsake ? null : keepsake ?? this.keepsake,
     );
   }
 }
 
-/// State controller for the scan debug screen.
-///
-/// Manages camera initialization, a periodic low-res frame loop, on-device cat
-/// detection, and the full-res capture + verify flow.
 class ScanController extends StateNotifier<ScanState> {
-  /// Create the controller.
   ScanController({
     required this.detectionService,
-    required this.verifier,
-    this.frameInterval = const Duration(milliseconds: 500),
-    this.previewResolution = ResolutionPreset.low,
+    required this.keepsakeService,
+    this.previewResolution = ResolutionPreset.high,
   }) : super(const ScanState());
 
-  /// Service used for on-device animal detection.
   final CatDetectionService detectionService;
-
-  /// Backend verifier for the capture flow.
-  final ScanVerifier verifier;
-
-  /// Delay between low-res detection frames.
-  final Duration frameInterval;
-
-  /// Camera preview resolution preset.
+  final KeepsakeService keepsakeService;
   final ResolutionPreset previewResolution;
 
-  final CatDetectionGate _gate = CatDetectionGate();
-  Timer? _frameTimer;
   bool _isDisposed = false;
   CameraController? _cameraController;
 
-  /// Initialize the camera and start the detection loop.
   Future<void> initialize() async {
     try {
       final cameras = await availableCameras();
@@ -132,10 +128,9 @@ class ScanController extends StateNotifier<ScanState> {
       state = state.copyWith(
         controller: _cameraController,
         isInitializing: false,
+        isCaptureEnabled: true,
         clearError: true,
       );
-
-      _startFrameLoop();
     } on CameraException catch (e) {
       state = state.copyWith(
         isInitializing: false,
@@ -149,73 +144,108 @@ class ScanController extends StateNotifier<ScanState> {
     }
   }
 
-  void _startFrameLoop() {
-    _frameTimer?.cancel();
-    _frameTimer = Timer.periodic(frameInterval, (_) => _processFrame());
-  }
-
-  Future<void> _processFrame() async {
-    final controller = _cameraController;
-    if (controller == null || !controller.value.isInitialized) return;
-
-    try {
-      final file = await controller.takePicture();
-      final bytes = await file.readAsBytes();
-      final detections = await detectionService.detect(bytes);
-
-      if (_isDisposed) return;
-
-      _gate.onFrame(detections);
-
-      state = state.copyWith(
-        detections: detections,
-        isCaptureEnabled: _gate.isCaptureEnabled,
-        clearError: true,
-      );
-    } on Exception catch (e) {
-      // Frame-loop errors are non-fatal; keep the preview alive and surface the
-      // message so it is not swallowed.
-      state = state.copyWith(error: 'Frame loop: $e');
-    }
-  }
-
-  /// Capture a full-resolution photo and run the verify flow.
+  /// Take a photo, freeze the preview, detect the cat, then auto-isolate.
   Future<void> capture() async {
     final controller = _cameraController;
     if (controller == null || !controller.value.isInitialized) return;
 
-    state = state.copyWith(isCapturing: true, clearError: true);
+    state = state.copyWith(isCapturing: true, isCaptureEnabled: false, clearError: true);
     try {
       final file = await controller.takePicture();
       final bytes = await file.readAsBytes();
-      final result = await verifier.captureAndVerify(bytes);
 
+      state = state.copyWith(capturedBytes: bytes);
+
+      final detections = await detectionService.detect(bytes);
       if (_isDisposed) return;
 
-      _gate.reset();
+      if (detections.isEmpty) {
+        state = state.copyWith(
+          isCapturing: false,
+          detections: const [],
+          error: 'No cat detected — retake',
+        );
+        return;
+      }
+
       state = state.copyWith(
         isCapturing: false,
-        lastResult: result,
-        isCaptureEnabled: false,
+        detections: detections,
+        isIsolating: true,
       );
     } on Exception catch (e) {
       if (_isDisposed) return;
+      state = state.copyWith(isCapturing: false, error: 'Capture failed: $e');
+      return;
+    }
+
+    await _isolate();
+  }
+
+  Future<void> _isolate() async {
+    final bytes = state.capturedBytes;
+    if (bytes == null) return;
+
+    try {
+      final isolated = await detectionService.isolateSubject(bytes);
+      if (_isDisposed) return;
+
+      if (isolated == null) {
+        state = state.copyWith(
+          isIsolating: false,
+          detections: const [],
+          error: 'Could not isolate cat — retake',
+        );
+        return;
+      }
+
       state = state.copyWith(
-        isCapturing: false,
-        error: 'Capture failed: $e',
+        isIsolating: false,
+        isolatedBytes: isolated,
+        detections: const [],
       );
+    } on Exception catch (e) {
+      if (_isDisposed) return;
+      state = state.copyWith(isIsolating: false, error: 'Isolation failed: $e');
     }
   }
 
-  /// Clear the most recent backend result.
-  void clearResult() {
-    state = state.copyWith(lastResult: null);
+  /// Upload the sticker to R2, create a keepsake, and save to Photos.
+  Future<void> catchIt() async {
+    final bytes = state.isolatedBytes;
+    if (bytes == null) return;
+
+    state = state.copyWith(isCreatingKeepsake: true, clearError: true);
+    try {
+      final keepsake = await keepsakeService.saveAndCreate(bytes);
+      if (_isDisposed) return;
+      state = state.copyWith(isCreatingKeepsake: false, keepsake: keepsake);
+    } catch (e) {
+      // Catch Object (not just Exception) — StateError from uninitialized
+      // Convex client extends Error, not Exception.
+      if (_isDisposed) return;
+      state = state.copyWith(isCreatingKeepsake: false, error: 'Could not save: $e');
+    }
+  }
+
+  /// Return to the live camera preview, clearing all captured/isolated state.
+  void retake() {
+    state = state.copyWith(
+      clearCaptured: true,
+      clearIsolated: true,
+      clearKeepsake: true,
+      clearError: true,
+      detections: const [],
+      isCaptureEnabled: true,
+      isCapturing: false,
+      isIsolating: false,
+      isCreatingKeepsake: false,
+    );
   }
 
   @override
   void dispose() {
     _isDisposed = true;
-    _frameTimer?.cancel();
     _cameraController?.dispose();
     _cameraController = null;
     super.dispose();

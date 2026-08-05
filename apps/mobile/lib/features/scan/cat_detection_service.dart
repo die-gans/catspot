@@ -9,15 +9,14 @@ import 'cat_detection_models.dart';
 /// channel is unavailable (Android, tests). When unavailable, [detect] returns
 /// an empty list and [isAvailable] is `false`.
 abstract interface class CatDetectionService {
-  /// Whether the platform channel is available on this device.
   bool get isAvailable;
 
-  /// Run animal detection on [imageBytes].
-  ///
-  /// Returns a list of detections, filtered to the top label for each
-  /// observation. On unsupported platforms or when the channel is missing, this
-  /// returns an empty list instead of throwing.
   Future<List<CatDetection>> detect(Uint8List imageBytes);
+
+  /// Remove the background from [imageBytes] and return a PNG of just the
+  /// foreground subject, or `null` if no subject was found or the platform
+  /// does not support this operation.
+  Future<Uint8List?> isolateSubject(Uint8List imageBytes);
 }
 
 /// Live platform-channel implementation backed by Apple Vision on iOS.
@@ -52,6 +51,18 @@ final class MethodChannelCatDetectionService implements CatDetectionService {
         .cast<Map<dynamic, dynamic>>()
         .map(_decodeDetection)
         .toList(growable: false);
+  }
+
+  @override
+  Future<Uint8List?> isolateSubject(Uint8List imageBytes) async {
+    if (!isAvailable) return null;
+    try {
+      final dynamic raw = await _channel.invokeMethod('isolateSubject', imageBytes);
+      if (raw == null) return null;
+      return raw as Uint8List;
+    } on PlatformException {
+      return null;
+    }
   }
 
   CatDetection _decodeDetection(Map<dynamic, dynamic> map) {

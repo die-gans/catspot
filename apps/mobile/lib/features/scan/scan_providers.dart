@@ -1,36 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 
 import '../../core/functions/functions_providers.dart';
 import 'cat_detection_service.dart';
+import 'keepsake_service.dart';
 import 'scan_controller.dart';
-import 'scan_verifier.dart';
 
-/// Default HTTP client for scan uploads.
-final httpClientProvider = Provider<http.Client>((ref) => http.Client());
+export '../../core/functions/functions_providers.dart' show catspotFunctionsProvider;
 
-/// Detection service used by the scan screen.
-///
-/// Returns a stub on unsupported platforms so the app still runs.
 final catDetectionServiceProvider = Provider<CatDetectionService>(
   (ref) => MethodChannelCatDetectionService(),
 );
 
-/// Backend verifier for the capture flow.
-final scanVerifierProvider = Provider<ScanVerifier>((ref) {
-  final client = ref.watch(httpClientProvider);
-  final functions = ref.watch(catspotFunctionsProvider);
-  return BackendScanVerifier(functions: functions, httpClient: client);
-});
+final keepsakeServiceProvider = Provider<KeepsakeService>(
+  (ref) => KeepsakeService(functions: ref.watch(catspotFunctionsProvider)),
+);
 
-/// State controller for the scan debug screen.
 final scanControllerProvider = StateNotifierProvider<ScanController, ScanState>(
-  (ref) {
-    final detectionService = ref.watch(catDetectionServiceProvider);
-    final verifier = ref.watch(scanVerifierProvider);
-    return ScanController(
-      detectionService: detectionService,
-      verifier: verifier,
-    );
-  },
+  (ref) => ScanController(
+    detectionService: ref.watch(catDetectionServiceProvider),
+    keepsakeService: ref.watch(keepsakeServiceProvider),
+  ),
 );

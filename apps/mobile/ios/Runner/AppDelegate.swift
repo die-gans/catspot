@@ -15,5 +15,8 @@ import UIKit
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CatDetectionPlugin") {
       CatDetectionPlugin.register(with: registrar)
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "GalleryPlugin") {
+      GalleryPlugin.register(with: registrar)
+    }
   }
 }

@@ -1,20 +1,16 @@
+import 'dart:typed_data';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'cat_detection_models.dart';
+import 'keepsake_model.dart';
 import 'scan_controller.dart';
 import 'scan_providers.dart';
-import 'scan_verifier.dart';
 
-/// Debug scan screen that exercises the iOS Vision cat detector and the Convex
-/// scan-verify flow.
-///
-/// Reachable at `/debug/scan`. This is intentionally behind a debug route and
-/// not part of the main user flow.
 class ScanScreen extends ConsumerStatefulWidget {
-  /// Create the scan screen.
   const ScanScreen({super.key});
 
   @override
@@ -35,15 +31,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     final state = ref.watch(scanControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scan Debug'),
-        actions: [
-          TextButton(
-            onPressed: () => context.go('/debug/validation'),
-            child: const Text('Validation'),
-          ),
-        ],
-      ),
+      appBar: state.keepsake == null
+          ? AppBar(title: const Text('Scan'))
+          : null,
       body: _buildBody(context, state),
     );
   }
@@ -57,10 +47,32 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       return _ErrorView(message: state.error!);
     }
 
+    // Catch result — keepsake successfully created.
+    if (state.keepsake != null) {
+      return _CatchResult(
+        keepsake: state.keepsake!,
+        isolatedBytes: state.isolatedBytes,
+        onScanAgain: () => ref.read(scanControllerProvider.notifier).retake(),
+      );
+    }
+
     final controller = state.controller;
     if (controller == null || !controller.value.isInitialized) {
       return const _ErrorView(message: 'Camera not initialized');
     }
+
+    // Isolation complete → sticker preview with "Catch!" button.
+    if (state.isolatedBytes != null) {
+      return _StickerPreview(
+        isolatedBytes: state.isolatedBytes!,
+        isBusy: state.isCreatingKeepsake,
+        onCatch: () => ref.read(scanControllerProvider.notifier).catchIt(),
+        onRetake: () => ref.read(scanControllerProvider.notifier).retake(),
+      );
+    }
+
+    final captured = state.capturedBytes;
+    final busy = state.isCapturing || state.isIsolating;
 
     return Column(
       children: [
@@ -68,12 +80,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CameraPreview(controller),
+              if (captured != null)
+                _StillImage(bytes: captured)
+              else
+                CameraPreview(controller),
               _BoundingBoxOverlay(detections: state.detections),
-              _StatusOverlay(
-                detections: state.detections,
-                isCaptureEnabled: state.isCaptureEnabled,
-              ),
+              if (busy)
+                const ColoredBox(
+                  color: Color(0x55000000),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
             ],
           ),
         ),
@@ -85,28 +101,193 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
-        if (state.lastResult != null)
-          _ResultBanner(result: state.lastResult!),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: state.isCaptureEnabled && !state.isCapturing
-                  ? () => ref.read(scanControllerProvider.notifier).capture()
-                  : null,
-              child: state.isCapturing
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+        if (!busy)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              child: captured == null
+                  ? FilledButton(
+                      onPressed: state.isCaptureEnabled
+                          ? () => ref.read(scanControllerProvider.notifier).capture()
+                          : null,
+                      child: const Text('Take Photo'),
                     )
-                  : const Text('Capture Cat'),
+                  : OutlinedButton(
+                      onPressed: () =>
+                          ref.read(scanControllerProvider.notifier).retake(),
+                      child: const Text('Retake'),
+                    ),
             ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sticker preview — shown after background removal, before keepsake creation
+// ---------------------------------------------------------------------------
+
+class _StickerPreview extends StatelessWidget {
+  const _StickerPreview({
+    required this.isolatedBytes,
+    required this.isBusy,
+    required this.onCatch,
+    required this.onRetake,
+  });
+
+  final Uint8List isolatedBytes;
+  final bool isBusy;
+  final VoidCallback onCatch;
+  final VoidCallback onRetake;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: CustomPaint(
+            painter: _CheckerboardPainter(),
+            child: Center(
+              child: Image.memory(isolatedBytes, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: isBusy ? null : onCatch,
+                child: isBusy
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Catch!'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: isBusy ? null : onRetake,
+                child: const Text('Retake'),
+              ),
+            ],
           ),
         ),
       ],
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Catch result — shown after keepsake is created
+// ---------------------------------------------------------------------------
+
+class _CatchResult extends StatelessWidget {
+  const _CatchResult({
+    required this.keepsake,
+    required this.isolatedBytes,
+    required this.onScanAgain,
+  });
+
+  final Keepsake keepsake;
+  final Uint8List? isolatedBytes;
+  final VoidCallback onScanAgain;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: CustomPaint(
+              painter: _CheckerboardPainter(),
+              child: Center(
+                child: isolatedBytes != null
+                    ? Image.memory(isolatedBytes!, fit: BoxFit.contain)
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              children: [
+                Text(
+                  keepsake.name,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  keepsake.serialNumber,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                        letterSpacing: 1.2,
+                      ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => context.go('/collection'),
+                    child: const Text('Go to Collection'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: onScanAgain,
+                    child: const Text('Scan Again'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared painters + helpers
+// ---------------------------------------------------------------------------
+
+class _CheckerboardPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const tileSize = 16.0;
+    final light = Paint()..color = const Color(0xFFEEEEEE);
+    final dark = Paint()..color = const Color(0xFFCCCCCC);
+    for (double y = 0; y < size.height; y += tileSize) {
+      for (double x = 0; x < size.width; x += tileSize) {
+        final isLight = ((x ~/ tileSize) + (y ~/ tileSize)) % 2 == 0;
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, tileSize, tileSize),
+          isLight ? light : dark,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CheckerboardPainter oldDelegate) => false;
+}
+
+class _StillImage extends StatelessWidget {
+  const _StillImage({required this.bytes});
+
+  final Uint8List bytes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.memory(bytes, fit: BoxFit.cover);
   }
 }
 
@@ -178,95 +359,6 @@ class _BoundingBoxPainter extends CustomPainter {
   bool shouldRepaint(covariant _BoundingBoxPainter oldDelegate) {
     return oldDelegate.detections != detections ||
         oldDelegate.previewSize != previewSize;
-  }
-}
-
-class _StatusOverlay extends StatelessWidget {
-  const _StatusOverlay({
-    required this.detections,
-    required this.isCaptureEnabled,
-  });
-
-  final List<CatDetection> detections;
-  final bool isCaptureEnabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: 12,
-      left: 12,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.black54,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Detections: ${detections.length}',
-              style: const TextStyle(color: Colors.white),
-            ),
-            Text(
-              isCaptureEnabled ? 'Capture enabled' : 'Looking for cat…',
-              style: TextStyle(
-                color: isCaptureEnabled ? Colors.greenAccent : Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResultBanner extends StatelessWidget {
-  const _ResultBanner({required this.result});
-
-  final ScanResult result;
-
-  @override
-  Widget build(BuildContext context) {
-    final (background, foreground) = switch (result) {
-      ScanApproved() => (
-          Colors.green.shade100,
-          Colors.green.shade900,
-        ),
-      ScanRejected() => (
-          Colors.red.shade100,
-          Colors.red.shade900,
-        ),
-      ScanFailed() => (
-          Colors.orange.shade100,
-          Colors.orange.shade900,
-        ),
-    };
-
-    return Container(
-      width: double.infinity,
-      color: background,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              result.message,
-              style: TextStyle(color: foreground, fontWeight: FontWeight.bold),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              // Reading the notifier in a button callback is safe here.
-              final container = ProviderScope.containerOf(context);
-              container.read(scanControllerProvider.notifier).clearResult();
-            },
-          ),
-        ],
-      ),
-    );
   }
 }
 
