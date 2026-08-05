@@ -14,6 +14,29 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Keepsakes: function-written only; client may read their own for direct
+    // Firestore collection queries.
+    match /keepsakes/{id} {
+      allow read: if request.auth != null
+                   && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Users: owner read/update. Create allowed as a client fallback with a
+    // constrained field set (normally seeded by the auth onCreate trigger).
+    match /users/{uid} {
+      allow create: if request.auth != null
+                    && uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'xp', 'coins', 'createdAt'])
+                    && request.resource.data.uid == uid;
+      allow read: if request.auth != null
+                   && uid == request.auth.uid;
+      allow update: if request.auth != null
+                    && uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'xp', 'coins', 'createdAt']);
+      allow delete: if false;
+    }
+
     // Deny everything else by default while the migration is in progress.
     match /{document=**} {
       allow read, write: if false;
