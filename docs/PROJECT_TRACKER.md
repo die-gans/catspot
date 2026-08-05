@@ -71,6 +71,8 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 - [x] **2026-08-05 PM: Gemini model swap + Plan 08 Phase A + Convex teardown.** gemini-2.5-flash retired for new API keys (404 on createKeepsake/verifyScan) → gemini-3.1-flash-lite, all 5 functions redeployed. PR #23: release white-screen hardening (runZonedGuarded, release-visible error surface, auth gate 10s timeout+retry, defensive iOS plugin registration, startup milestone logs). PR #24: Convex skeleton DELETED (dead since #21, was breaking CI), CONVEX_URL stripped from codemagic.yaml, CI backend job = functions-only. TestFlight build #17 (6a731741add5700b78d83766) triggered on merged main → white screen either fixed or self-diagnosing. Remaining Phase B: users collection + Firestore-direct collection screen.
 
+- [x] **Plan 08 Phase B COMPLETE 2026-08-05 (PR #25):** seedUser auth onCreate trigger live (users/{uid}), rules: keepsakes owner-read direct / users owner-rw, MOB collection screen → Firestore stream (live updates), UserService.ensureUserDoc, cloud_firestore ^6.8.0. 6 functions deployed. Build #18 (6a731de64e956dbe4d9c4e53) = E2E candidate. Gotchas banked: v1 auth provider needed @firebase/app dep for pnpm deploy resolution; npm install in functions/ requires pnpm lockfile re-sync for CI.
+
 ## ✅ Also resolved (2026-08-04)
 
 - [x] **White screen on launch** — PR #17 (resilient startup + error surface) + d014b80 (build number from git commit count fixing duplicate bundle version on ASC upload). TestFlight pipeline clean.
