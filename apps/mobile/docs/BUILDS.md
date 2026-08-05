@@ -47,17 +47,76 @@ The **iOS Dev IPA** workflow is configured but intentionally dormant. Do **not**
 | On-device cat detection | ✅ | Apple Vision `VNRecognizeAnimalsRequest` |
 | Background removal (sticker) | ✅ | iOS 17+ `VNGenerateForegroundInstanceMaskRequest`; EXIF orientation fix |
 | Save sticker to Photos | ✅ | `GalleryPlugin` via `catspot/gallery` channel |
-| Keepsake creation | ✅ | R2 upload → Convex action → Gemini 2.5 Flash name → DB insert |
+| Keepsake creation | ✅ | R2 upload → Cloud Function → Gemini 2.5 Flash name → Firestore |
 | Catch result screen | ✅ | Name + `CAT-NNNN` serial + "Go to Collection" |
 | Collection screen | ✅ | 2-col grid, empty state, `FutureProvider` |
 | Home screen | ✅ | "Scan for a Cat" + "My Collection" |
-| Auth (Firebase + Convex) | ✅ | Google, Apple, email sign-in |
+| Auth (Firebase) | ✅ | Google, Apple, email sign-in |
+| Cloud Functions (keepsakes) | ✅ | Written + pushed; **not yet deployed** — see task below |
 
-### Pending / not started
+### 🔧 TASK FOR NEXT AGENT: Deploy keepsake Cloud Functions
 
-- Convex backend deploy (`keepsakes.ts` written, needs `npx convex deploy`)
-- R2 env vars (`R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_PUBLIC_URL`, etc.) must be set in Convex dashboard
-- Convex → Firebase auth migration (nice-to-have: replace Convex with Firestore)
+**Status:** Code is merged to `main`. Functions are written but not deployed. The catch flow will stall until this is done.
+
+**Working directory:** `packages/backend/functions/`
+
+**Steps:**
+
+#### 1. Set environment variables in Firebase
+
+Before deploying, the functions need R2 and Gemini credentials. Set them via the Firebase CLI:
+
+```bash
+firebase functions:secrets:set R2_ACCOUNT_ID
+firebase functions:secrets:set R2_ACCESS_KEY_ID
+firebase functions:secrets:set R2_SECRET_ACCESS_KEY
+firebase functions:secrets:set R2_BUCKET
+firebase functions:secrets:set R2_PUBLIC_URL
+firebase functions:secrets:set GEMINI_API_KEY
+```
+
+Or set them as environment config if using `.env.local` / Functions config (check how `GEMINI_API_KEY` and R2 vars are set for the existing `requestScan`/`verifyScan` functions — use the same mechanism).
+
+> The existing `requestScan` and `verifyScan` functions already use these same R2 and Gemini vars, so they should already be configured. Confirm with `firebase functions:config:get` or check the Firebase console under Functions → Configuration.
+
+#### 2. Deploy
+
+```bash
+cd packages/backend/functions
+npm install
+firebase deploy --only functions
+```
+
+This deploys all four functions: `requestScan`, `verifyScan`, `requestCutoutUpload`, `createKeepsake`, `listKeepsakes`.
+
+#### 3. Create the Firestore composite index
+
+The `listKeepsakes` function queries:
+```
+collection("keepsakes").where("uid", "==", uid).orderBy("createdAt", "desc")
+```
+
+This requires a composite index on `(uid ASC, createdAt DESC)`. On the first call Firebase will log a URL like:
+```
+https://console.firebase.google.com/project/.../firestore/indexes?create_composite=...
+```
+
+Open that URL and click **Create**. Or create it manually in the Firestore console:
+- Collection: `keepsakes`
+- Fields: `uid` (Ascending), `createdAt` (Descending)
+- Query scope: Collection
+
+#### 4. Verify
+
+After deploying, test the catch flow end-to-end on the iOS simulator:
+1. Open app → Scan for a Cat → take photo → tap "Catch!"
+2. Should show spinner, then the catch result screen with a Gemini-generated name and `CAT-0001` serial
+3. Tap "Go to Collection" → should show the keepsake card
+
+If the catch stalls, check Firebase Functions logs:
+```bash
+firebase functions:log --only requestCutoutUpload,createKeepsake
+```
 
 ## Notes
 
