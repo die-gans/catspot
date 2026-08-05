@@ -48,9 +48,8 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
   }
 
   void _retry() {
-    setState(() {
-      _timedOut = false;
-    });
+    _startTimeout();
+    setState(() => _timedOut = false);
   }
 
   @override
