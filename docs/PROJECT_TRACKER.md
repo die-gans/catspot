@@ -63,6 +63,8 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **✅ BUILD 6a727b14baa34a485ff09663 (dab3b52, scan pipeline) GREEN 2026-08-05:** Full pipeline success — IPA built + `No errors uploading archive` → TestFlight processing. Backend deployed to Convex dev + env vars set. **NEXT for Dan:** ~10-30 min ASC processing → install from TestFlight, open /debug/scan, point phone at a cat, verify scan → upload → Gemini verdict end-to-end.
 
+**❌ BUILD #15 6a72e0c992e037665be136e7 (fea8359, full catch flow) FAILED AT PUBLISHING 2026-08-05:** IPA built clean, but build number regressed — log shows `Using build number: 1050` (required >1050; 1050 already used by build #14). ASC rejected upload: `The provided entity includes an attribute with a value that has already been used` → `Failed to publish catspot_mobile.ipa to App Store Connect`. Root cause: `1000 + $CM_BUILD_NUMBER` did not increment between #14 and #15 (both resolved to 1050 — CM_BUILD_NUMBER is per-workflow/app counter, not monotonic across workflows, or re-run reuse). Fix needed (MOB/INF): make build number strictly monotonic — e.g. git commit count (`git rev-list --count HEAD`) or ASC latest_build_number+1 fetch. Code itself is fine — all 15 steps through archive/export green; just needs a fresh number and retrigger.
+
 ## ✅ Also resolved (2026-08-04)
 
 - [x] **White screen on launch** — PR #17 (resilient startup + error surface) + d014b80 (build number from git commit count fixing duplicate bundle version on ASC upload). TestFlight pipeline clean.
