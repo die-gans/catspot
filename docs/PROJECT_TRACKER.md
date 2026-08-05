@@ -59,6 +59,8 @@ Design system v1, monorepo scaffold, GitHub Actions CI, theme tokens, Convex + F
 
 **⚠️ BUILD 6a71f2f71830907d56d217f7 (scan pipeline, fe2df52) FAILED AT ARCHIVE 2026-08-04:** pbxproj path fix held (clean through pod install + 239s archive), but Swift compile error: `registrar(forPlugin:)` returns `(any FlutterPluginRegistrar)?` and was passed unwrapped to `CatDetectionPlugin.register(with:)` in AppDelegate.swift. Fixed in dab3b52 (if-let unwrap) → retriggered as build 6a727b14baa34a485ff09663.
 
+**✅ BUILD #14 6a72d2812ecc67a8e60c25c9 (039a7db, Firebase stack + build-number fix) GREEN 2026-08-05:** Full pipeline success. Verified in 'Build iOS release IPA' log: `Using build number: 1050` (bulletproof 1000+CM_BUILD_NUMBER fix working, >1000 ✓). ASC upload clean: `No errors uploading archive` → TestFlight processing. **NEXT for Dan:** ~10-30 min processing → install from TestFlight, sign in (Firebase Auth), /debug/scan, point phone at a cat — end-to-end field test on the Firebase stack.
+
 **✅ BUILD 6a727b14baa34a485ff09663 (dab3b52, scan pipeline) GREEN 2026-08-05:** Full pipeline success — IPA built + `No errors uploading archive` → TestFlight processing. Backend deployed to Convex dev + env vars set. **NEXT for Dan:** ~10-30 min ASC processing → install from TestFlight, open /debug/scan, point phone at a cat, verify scan → upload → Gemini verdict end-to-end.
 
 ## ✅ Also resolved (2026-08-04)
