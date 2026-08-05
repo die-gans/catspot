@@ -1,5 +1,4 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
