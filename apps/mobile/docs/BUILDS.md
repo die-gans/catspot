@@ -37,6 +37,28 @@ The **iOS Dev IPA** workflow is configured but intentionally dormant. Do **not**
 6. Trigger the **iOS Dev IPA** workflow manually in Codemagic.
 7. Install the resulting `.ipa` on the registered device via Diawi, or later via TestFlight once the app is in App Store Connect.
 
+## Feature status (as of 2026-08-05)
+
+### Implemented and committed to `main`
+
+| Feature | Status | Notes |
+|---|---|---|
+| Camera preview + shutter | ✅ | Single-shot; back camera |
+| On-device cat detection | ✅ | Apple Vision `VNRecognizeAnimalsRequest` |
+| Background removal (sticker) | ✅ | iOS 17+ `VNGenerateForegroundInstanceMaskRequest`; EXIF orientation fix |
+| Save sticker to Photos | ✅ | `GalleryPlugin` via `catspot/gallery` channel |
+| Keepsake creation | ✅ | R2 upload → Convex action → Gemini 2.5 Flash name → DB insert |
+| Catch result screen | ✅ | Name + `CAT-NNNN` serial + "Go to Collection" |
+| Collection screen | ✅ | 2-col grid, empty state, `FutureProvider` |
+| Home screen | ✅ | "Scan for a Cat" + "My Collection" |
+| Auth (Firebase + Convex) | ✅ | Google, Apple, email sign-in |
+
+### Pending / not started
+
+- Convex backend deploy (`keepsakes.ts` written, needs `npx convex deploy`)
+- R2 env vars (`R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_PUBLIC_URL`, etc.) must be set in Convex dashboard
+- Convex → Firebase auth migration (nice-to-have: replace Convex with Firestore)
+
 ## Notes
 
 - No extra backend URL dart-define is needed; Firebase configuration is bundled at build time via `firebase_options.dart` and Google Services config files.

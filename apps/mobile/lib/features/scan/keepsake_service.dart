@@ -3,20 +3,16 @@ import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-import '../../core/functions/scan_functions.dart';
 import 'keepsake_model.dart';
 
 class KeepsakeService {
   KeepsakeService({
-    CatspotFunctions? functions,
     FirebaseFunctions? firebaseFunctions,
     http.Client? httpClient,
-  })  : _functions = functions,
-        _firebase = firebaseFunctions ??
+  })  : _firebase = firebaseFunctions ??
             FirebaseFunctions.instanceFor(region: 'us-central1'),
         _http = httpClient ?? http.Client();
 
-  final CatspotFunctions? _functions;
   final FirebaseFunctions _firebase;
   final http.Client _http;
 
@@ -62,7 +58,6 @@ class KeepsakeService {
     final callable = _firebase.httpsCallable('listKeepsakes');
     final result = await callable.call<List<Object?>>(null);
     final raw = result.data;
-    if (raw == null) return const [];
     return raw
         .cast<Map<Object?, Object?>>()
         .map((m) => Keepsake.fromJson(_asMap(m)))

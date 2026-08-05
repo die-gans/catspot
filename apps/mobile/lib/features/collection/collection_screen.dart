@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/functions/functions_providers.dart';
 import '../scan/keepsake_model.dart';
 import '../scan/keepsake_service.dart';
 
 final _keepsakeServiceProvider = Provider<KeepsakeService>(
-  (ref) => KeepsakeService(functions: ref.watch(catspotFunctionsProvider)),
+  (ref) => KeepsakeService(),
 );
 
 final _keepsakeListProvider = FutureProvider<List<Keepsake>>((ref) {
