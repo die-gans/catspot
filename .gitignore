@@ -54,6 +54,13 @@ android/app/build/
 *.cert
 *.credentials
 *.token
+packages/backend/functions/.env
+packages/backend/functions/.env.*
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
 
 # macOS
 .DS_Store

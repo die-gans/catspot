@@ -72,11 +72,17 @@ jobs:
       - name: Install backend dependencies
         run: pnpm install
 
-      - name: Backend typecheck / lint placeholder
+      - name: Typecheck Convex backend skeleton
         run: |
           if [ -f tsconfig.json ]; then
-            echo "tsconfig.json found; running tsc --noEmit"
+            echo "tsconfig.json found; running pnpm exec tsc --noEmit"
             pnpm exec tsc --noEmit
           else
             echo "Backend skeleton: no tsconfig.json yet. Typecheck/lint deferred to S2 backend implementation."
           fi
+
+      - name: Install & typecheck Firebase Functions package
+        working-directory: packages/backend/functions
+        run: |
+          pnpm install
+          pnpm run typecheck
