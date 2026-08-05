@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/theme.dart';
+import 'user_service.dart';
 
 const _startupTag = '[catspot-startup]';
 const _authTimeout = Duration(seconds: 10);
@@ -15,6 +16,7 @@ class FirebaseAuthGate extends StatefulWidget {
   const FirebaseAuthGate({
     required this.home,
     this.authStateChanges,
+    this.userService,
     super.key,
   });
 
@@ -26,6 +28,9 @@ class FirebaseAuthGate extends StatefulWidget {
   /// When omitted, the gate listens to [FirebaseAuth.instance.authStateChanges].
   final Stream<User?>? authStateChanges;
 
+  /// Optional [UserService] for testing.
+  final UserService? userService;
+
   @override
   State<FirebaseAuthGate> createState() => _FirebaseAuthGateState();
 }
@@ -33,10 +38,13 @@ class FirebaseAuthGate extends StatefulWidget {
 class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
   Timer? _timeoutTimer;
   bool _timedOut = false;
+  final _ensuredUids = <String>{};
 
   Stream<User?> _stream() {
     return widget.authStateChanges ?? FirebaseAuth.instance.authStateChanges();
   }
+
+  UserService get _userService => widget.userService ?? UserService();
 
   void _startTimeout() {
     _timeoutTimer?.cancel();
@@ -50,6 +58,13 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
   void _retry() {
     _startTimeout();
     setState(() => _timedOut = false);
+  }
+
+  void _ensureUserDoc(User user) {
+    if (_ensuredUids.contains(user.uid)) return;
+    _ensuredUids.add(user.uid);
+    // Best-effort client-side fallback; the backend trigger is primary.
+    unawaited(_userService.ensureUserDoc(user));
   }
 
   @override
@@ -98,6 +113,7 @@ class _FirebaseAuthGateState extends State<FirebaseAuthGate> {
         debugPrint('$_startupTag auth first event: ${user != null ? 'signed-in' : 'signed-out'}');
 
         if (user != null) {
+          _ensureUserDoc(user);
           return widget.home;
         }
         return const _SignInShell();

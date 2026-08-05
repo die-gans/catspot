@@ -3,22 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../scan/keepsake_model.dart';
-import '../scan/keepsake_service.dart';
-
-final _keepsakeServiceProvider = Provider<KeepsakeService>(
-  (ref) => KeepsakeService(),
-);
-
-final _keepsakeListProvider = FutureProvider<List<Keepsake>>((ref) {
-  return ref.watch(_keepsakeServiceProvider).list();
-});
+import 'collection_providers.dart';
 
 class CollectionScreen extends ConsumerWidget {
   const CollectionScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final keepsakes = ref.watch(_keepsakeListProvider);
+    final keepsakes = ref.watch(keepsakeStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -44,7 +36,7 @@ class CollectionScreen extends ConsumerWidget {
                 const Text('Could not load collection', textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 OutlinedButton(
-                  onPressed: () => ref.invalidate(_keepsakeListProvider),
+                  onPressed: () => ref.invalidate(keepsakeStreamProvider),
                   child: const Text('Retry'),
                 ),
               ],
