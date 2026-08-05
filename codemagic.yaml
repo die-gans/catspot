@@ -10,7 +10,6 @@ workflows:
     environment:
       flutter: fvm
       vars:
-        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
     triggering:
       events:
         - push
@@ -34,7 +33,7 @@ workflows:
       - name: Get Flutter packages
         script: fvm flutter pub get
       - name: Build Android debug APK
-        script: fvm flutter build apk --debug --dart-define=CONVEX_URL=$CONVEX_URL
+        script: fvm flutter build apk --debug
     artifacts:
       - apps/mobile/build/app/outputs/flutter-apk/*.apk
 
@@ -53,7 +52,6 @@ workflows:
       xcode: latest
       cocoapods: default
       vars:
-        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
         PATH: "$HOME/.cargo/bin:$PATH"
       groups:
         # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
@@ -94,7 +92,7 @@ workflows:
       - name: Install CocoaPods
         script: cd ios && pod install
       - name: Build iOS dev IPA
-        script: fvm flutter build ipa --debug --dart-define=CONVEX_URL=$CONVEX_URL
+        script: fvm flutter build ipa --debug
     artifacts:
       - build/ios/ipa/*.ipa
 
@@ -113,7 +111,6 @@ workflows:
       xcode: latest
       cocoapods: default
       vars:
-        CONVEX_URL: "https://amiable-egret-416.convex.cloud"
         PATH: "$HOME/.cargo/bin:$PATH"
       groups:
         # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
@@ -162,7 +159,7 @@ workflows:
           # causing duplicate-upload rejections on builds #13/#15). Fallback: commit count.
           BUILD_NUMBER=$((1000 + ${PROJECT_BUILD_NUMBER:-$(git rev-list --count HEAD)}))
           echo "Using build number: $BUILD_NUMBER (PROJECT_BUILD_NUMBER=${PROJECT_BUILD_NUMBER:-unset})"
-          fvm flutter build ipa --release --build-number=$BUILD_NUMBER --dart-define=CONVEX_URL=$CONVEX_URL --export-options-plist=$HOME/export_options.plist
+          fvm flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=$HOME/export_options.plist
           ls build/ios/ipa/*.ipa
     artifacts:
       - build/ios/ipa/*.ipa
