@@ -179,6 +179,8 @@ workflows:
       scripts:
         - name: Discord notification
           script: |
+            # Never fail a build over a notification.
+            if [ -z "${WEBHOOK_URL:-}" ]; then echo "WEBHOOK_URL unset, skipping"; exit 0; fi
             COMMIT=$(echo "${CM_COMMIT}" | cut -c1-7)
             COMMIT_MESSAGE=$(git log --format=%B -n 1 $CM_COMMIT | head -1)
             if [ "${CM_BUILD_RESULT:-success}" = "success" ]; then
@@ -190,4 +192,4 @@ workflows:
             fi
             curl -s -H "Content-Type: application/json" \
               -d "{\"username\": \"codemagic-builds\", \"content\": \"$MSG\\n**Commit:** \`$COMMIT\` — $COMMIT_MESSAGE\\n**Branch:** $CM_BRANCH\\n**Build:** https://codemagic.io/app/$CM_APP_ID/build/$CM_BUILD_ID\\n$TAIL\"}" \
-              $WEBHOOK_URL
+              "$WEBHOOK_URL" || true
