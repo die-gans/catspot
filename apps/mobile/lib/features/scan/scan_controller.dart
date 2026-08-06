@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'cat_detection_models.dart';
 import 'cat_detection_service.dart';
 import 'keepsake_model.dart';
 import 'keepsake_service.dart';
+import 'sticker_shrinker.dart';
 
 @immutable
 class ScanState {
@@ -41,10 +44,11 @@ class ScanState {
   /// Cat-only PNG with transparent background — the sticker.
   final Uint8List? isolatedBytes;
 
-  /// R2 upload + Convex create + Photos save is in flight.
+  /// R2 upload + Cloud Function create + Photos save is in flight.
   final bool isCreatingKeepsake;
 
-  /// Set once the keepsake is created; triggers the catch result screen.
+  /// Set once the keepsake is created (optimistic or confirmed). Triggers the
+  /// catch result screen.
   final Keepsake? keepsake;
 
   ScanState copyWith({
@@ -85,11 +89,18 @@ class ScanController extends StateNotifier<ScanState> {
     required this.detectionService,
     required this.keepsakeService,
     this.previewResolution = ResolutionPreset.high,
+    this.stickerShrinker = defaultStickerShrinker,
+    this.retryDelays = const [
+      Duration(seconds: 2),
+      Duration(seconds: 4),
+    ],
   }) : super(const ScanState());
 
   final CatDetectionService detectionService;
   final KeepsakeService keepsakeService;
   final ResolutionPreset previewResolution;
+  final Future<Uint8List> Function(Uint8List, VisionBoundingBox) stickerShrinker;
+  final List<Duration> retryDelays;
 
   bool _isDisposed = false;
   CameraController? _cameraController;
@@ -149,7 +160,11 @@ class ScanController extends StateNotifier<ScanState> {
     final controller = _cameraController;
     if (controller == null || !controller.value.isInitialized) return;
 
-    state = state.copyWith(isCapturing: true, isCaptureEnabled: false, clearError: true);
+    state = state.copyWith(
+      isCapturing: true,
+      isCaptureEnabled: false,
+      clearError: true,
+    );
     try {
       final file = await controller.takePicture();
       final bytes = await file.readAsBytes();
@@ -202,7 +217,6 @@ class ScanController extends StateNotifier<ScanState> {
       state = state.copyWith(
         isIsolating: false,
         isolatedBytes: isolated,
-        detections: const [],
       );
     } on Exception catch (e) {
       if (_isDisposed) return;
@@ -210,22 +224,97 @@ class ScanController extends StateNotifier<ScanState> {
     }
   }
 
-  /// Upload the sticker to R2, create a keepsake, and save to Photos.
+  /// Start saving the sticker optimistically, then keep retrying in the
+  /// background until it succeeds or the retry budget is exhausted.
   Future<void> catchIt() async {
     final bytes = state.isolatedBytes;
-    if (bytes == null) return;
+    if (bytes == null || state.isCreatingKeepsake) return;
 
-    state = state.copyWith(isCreatingKeepsake: true, clearError: true);
-    try {
-      final keepsake = await keepsakeService.saveAndCreate(bytes);
-      if (_isDisposed) return;
-      state = state.copyWith(isCreatingKeepsake: false, keepsake: keepsake);
-    } catch (e) {
-      // Catch Object (not just Exception) — StateError from uninitialized
-      // Convex client extends Error, not Exception.
-      if (_isDisposed) return;
-      state = state.copyWith(isCreatingKeepsake: false, error: 'Could not save: $e');
+    final detection = state.detections.firstOrNull;
+    final optimistic = _optimisticKeepsake();
+
+    state = state.copyWith(
+      isCreatingKeepsake: true,
+      keepsake: optimistic,
+      clearError: true,
+    );
+
+    unawaited(_saveWithRetry(bytes, detection?.boundingBox, optimistic));
+  }
+
+  /// Retry a failed save from the result screen. The catch is not lost.
+  Future<void> retrySave() async {
+    final bytes = state.isolatedBytes;
+    final detection = state.detections.firstOrNull;
+    final optimistic = state.keepsake;
+
+    if (bytes == null || optimistic == null || state.isCreatingKeepsake) {
+      return;
     }
+
+    state = state.copyWith(
+      isCreatingKeepsake: true,
+      clearError: true,
+    );
+
+    unawaited(_saveWithRetry(bytes, detection?.boundingBox, optimistic));
+  }
+
+  Future<void> _saveWithRetry(
+    Uint8List bytes,
+    VisionBoundingBox? box,
+    Keepsake optimistic,
+  ) async {
+    try {
+      final shrunk = box != null
+          ? await stickerShrinker(bytes, box)
+          : bytes;
+      final server = await _trySave(shrunk);
+      if (_isDisposed) return;
+      state = state.copyWith(
+        isCreatingKeepsake: false,
+        keepsake: server,
+      );
+    } on Object catch (e) {
+      // Catch Object — not just Exception — because some downstream errors
+      // (e.g. uninitialized client StateError) extend Error, not Exception.
+      if (_isDisposed) return;
+      state = state.copyWith(
+        isCreatingKeepsake: false,
+        error: 'Could not save: $e',
+      );
+    }
+  }
+
+  Future<Keepsake> _trySave(Uint8List png) async {
+    for (var attempt = 0; attempt <= retryDelays.length; attempt++) {
+      try {
+        return await keepsakeService.saveAndCreate(png);
+      } on Object {
+        if (attempt == retryDelays.length) {
+          rethrow;
+        }
+        if (_isDisposed) {
+          rethrow;
+        }
+        await Future.delayed(retryDelays[attempt]);
+        if (_isDisposed) {
+          rethrow;
+        }
+      }
+    }
+    throw StateError('exhausted retry budget without success');
+  }
+
+  Keepsake _optimisticKeepsake() {
+    final now = DateTime.now();
+    return Keepsake(
+      id: 'optimistic-${now.millisecondsSinceEpoch}',
+      name: null,
+      cutoutUrl: '',
+      serialNumber: 'CS-????',
+      createdAt: now,
+    );
   }
 
   /// Return to the live camera preview, clearing all captured/isolated state.

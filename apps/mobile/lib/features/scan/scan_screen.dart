@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'cat_detection_models.dart';
-import 'keepsake_model.dart';
 import 'scan_controller.dart';
 import 'scan_providers.dart';
 
@@ -52,12 +51,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       return _ErrorView(message: state.error!);
     }
 
-    // Catch result — keepsake successfully created.
+    // Catch result — show the sticker immediately, confirm server-side in the
+    // background.
     if (state.keepsake != null) {
       return _CatchResult(
-        keepsake: state.keepsake!,
-        isolatedBytes: state.isolatedBytes,
+        state: state,
         onScanAgain: () => ref.read(scanControllerProvider.notifier).retake(),
+        onRetry: () => ref.read(scanControllerProvider.notifier).retrySave(),
       );
     }
 
@@ -188,22 +188,25 @@ class _StickerPreview extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Catch result — shown after keepsake is created
+// Catch result — shown immediately after the user taps Catch.
+// The server keepsake is confirmed in the background.
 // ---------------------------------------------------------------------------
 
 class _CatchResult extends StatelessWidget {
   const _CatchResult({
-    required this.keepsake,
-    required this.isolatedBytes,
+    required this.state,
     required this.onScanAgain,
+    required this.onRetry,
   });
 
-  final Keepsake keepsake;
-  final Uint8List? isolatedBytes;
+  final ScanState state;
   final VoidCallback onScanAgain;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final keepsake = state.keepsake!;
+
     return SafeArea(
       child: Column(
         children: [
@@ -211,8 +214,8 @@ class _CatchResult extends StatelessWidget {
             child: CustomPaint(
               painter: _CheckerboardPainter(),
               child: Center(
-                child: isolatedBytes != null
-                    ? Image.memory(isolatedBytes!, fit: BoxFit.contain)
+                child: state.isolatedBytes != null
+                    ? Image.memory(state.isolatedBytes!, fit: BoxFit.contain)
                     : const SizedBox.shrink(),
               ),
             ),
@@ -236,6 +239,39 @@ class _CatchResult extends StatelessWidget {
                         letterSpacing: 1.2,
                       ),
                 ),
+                if (state.isCreatingKeepsake) ...[
+                  const SizedBox(height: 12),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Still saving…'),
+                    ],
+                  ),
+                ],
+                if (state.error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    state.error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: onRetry,
+                      child: const Text('Retry'),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
