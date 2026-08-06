@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "catspot-9ee0d"
+    "default": "catspot-dev-2026",
+    "prod": "catspot-9ee0d",
+    "dev": "catspot-dev-2026"
   }
 }
