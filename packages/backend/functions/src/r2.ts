@@ -1,6 +1,30 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+/**
+ * Upload a buffer of bytes directly to R2.
+ *
+ * Used by server-side functions that already have the full payload (e.g. a
+ * base64-decoded PNG from a callable).
+ */
+export async function uploadObjectBytes(
+  key: string,
+  bytes: Buffer,
+  contentType: string = "application/octet-stream"
+): Promise<void> {
+  const client = createR2Client();
+  const bucket = requireEnv("R2_BUCKET");
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: bytes,
+      ContentType: contentType,
+    })
+  );
+}
+
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
