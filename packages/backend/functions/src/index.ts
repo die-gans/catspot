@@ -3,8 +3,8 @@ import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { user } from "firebase-functions/v1/auth";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { getObjectBytes, getPublicUrl, getSignedUploadUrl, uploadObjectBytes } from "./r2.js";
-import { callGemini, generateCatName, type Verdict } from "./vision.js";
+import { getObjectBytes, getPublicUrl, uploadObjectBytes } from "./r2.js";
+import { generateCatName } from "./vision.js";
 
 initializeApp();
 
@@ -32,113 +32,6 @@ export const seedUser = user().onCreate(async (user) => {
       createdAt: FieldValue.serverTimestamp(),
     });
 });
-
-/**
- * Request a new scan upload.
- *
- * Authenticated users only. Creates a Firestore scan document in
- * `awaiting_upload` state, then returns the scan id and a presigned R2 PUT URL
- * for the original JPEG. The client uploads directly to R2; the key format is
- * `scans/{uid}/{scanId}.jpg`.
- */
-export const requestScan = onCall(
-  {
-    region: "us-central1",
-    enforceAppCheck: false,
-  },
-  async (request): Promise<{ scanId: string; uploadUrl: string }> => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Not authenticated");
-    }
-
-    const uid = request.auth.uid;
-    const scanRef = db.collection("scans").doc();
-    const scanId = scanRef.id;
-    const r2Key = `scans/${uid}/${scanId}.jpg`;
-
-    const uploadUrl = await getSignedUploadUrl(r2Key, "image/jpeg", 900);
-
-    await scanRef.set({
-      uid,
-      status: "awaiting_upload",
-      r2Key,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-
-    return { scanId, uploadUrl };
-  }
-);
-
-interface VerifyScanData {
-  scanId: string;
-}
-
-/**
- * Verify an uploaded scan with Gemini.
- *
- * Authenticated, owner-only. Fetches the JPEG from R2, base64-encodes it, calls
- * Gemini 2.5 Flash with the verdict prompt, and updates the scan document with
- * the structured verdict. Rejected images still record a verdict; errors move
- * the scan to `error` status and preserve the message.
- */
-export const verifyScan = onCall(
-  {
-    region: "us-central1",
-    enforceAppCheck: false,
-  },
-  async (request): Promise<{ verdict: Verdict }> => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Not authenticated");
-    }
-
-    const uid = request.auth.uid;
-    const { scanId } = request.data as VerifyScanData;
-
-    if (!scanId || typeof scanId !== "string") {
-      throw new HttpsError("invalid-argument", "scanId is required");
-    }
-
-    const scanRef = db.collection("scans").doc(scanId);
-    const scanDoc = await scanRef.get();
-
-    if (!scanDoc.exists) {
-      throw new HttpsError("not-found", "Scan not found");
-    }
-
-    const scan = scanDoc.data() as { uid: string; r2Key?: string };
-    if (scan.uid !== uid) {
-      throw new HttpsError("permission-denied", "Forbidden");
-    }
-    if (!scan.r2Key) {
-      throw new HttpsError("failed-precondition", "Scan has no uploaded image");
-    }
-
-    try {
-      const imageBytes = await getObjectBytes(scan.r2Key);
-      const base64Image = imageBytes.toString("base64");
-      const verdict = await callGemini(base64Image);
-      const status = verdict.is_real_cat && verdict.is_live_photo
-        ? "verified"
-        : "rejected";
-
-      await scanRef.update({
-        status,
-        verdict,
-        r2Key: scan.r2Key,
-        verifiedAt: FieldValue.serverTimestamp(),
-      });
-
-      return { verdict };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await scanRef.update({
-        status: "error",
-        errorMessage: message,
-      });
-      throw new HttpsError("internal", message);
-    }
-  }
-);
 
 // ---------------------------------------------------------------------------
 // Keepsake functions
@@ -272,8 +165,6 @@ export const nameKeepsake = onDocumentCreated(
       return;
     }
 
-    // Skip if the doc was written with an already-resolved name (e.g. by the
-    // legacy createKeepsake path).
     const currentName = data?.name as string | null | undefined;
     if (currentName !== null && typeof currentName === "string" && currentName.length > 0) {
       console.log(`nameKeepsake: keepsake ${snap.id} already named "${currentName}"; skipping`);
@@ -290,71 +181,6 @@ export const nameKeepsake = onDocumentCreated(
       console.error(`nameKeepsake: failed to name keepsake ${snap.id}: ${message}`);
       // Leave placeholder name; failure must not break anything.
     }
-  }
-);
-
-/**
- * Request a presigned PUT URL for uploading a cat cutout PNG to R2.
- *
- * @deprecated Mobile is switching to `catchKeepsake`; this 2-step upload flow
- * is kept temporarily as a shim for any in-flight clients.
- */
-export const requestCutoutUpload = onCall(
-  { region: "us-central1", enforceAppCheck: false },
-  async (request): Promise<{ uploadUrl: string; r2Key: string }> => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Not authenticated");
-    }
-
-    const uid = request.auth.uid;
-    const r2Key = `cutouts/${uid}/${Date.now()}.png`;
-    const uploadUrl = await getSignedUploadUrl(r2Key, "image/png", 900);
-    return { uploadUrl, r2Key };
-  }
-);
-
-interface CreateKeepsakeData {
-  r2Key: string;
-}
-
-/**
- * Create a keepsake from an already-uploaded cutout PNG.
- *
- * @deprecated Mobile is switching to `catchKeepsake`; this function is kept
- * temporarily as a shim for any in-flight clients. It still performs inline
- * Gemini naming (slower) and does not populate the canonical `r2Key` field.
- */
-export const createKeepsake = onCall(
-  { region: "us-central1", enforceAppCheck: false },
-  async (request): Promise<KeepsakeResponse> => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Not authenticated");
-    }
-
-    const uid = request.auth.uid;
-    const { r2Key } = request.data as CreateKeepsakeData;
-
-    if (!r2Key || typeof r2Key !== "string") {
-      throw new HttpsError("invalid-argument", "r2Key is required");
-    }
-
-    const serialNumber = await computeNextSerialNumber(uid);
-    const imageBytes = await getObjectBytes(r2Key);
-    const name = await generateCatName(imageBytes.toString("base64"));
-
-    const cutoutUrl = getPublicUrl(r2Key);
-    const createdAt = Date.now();
-
-    const docRef = await db.collection("keepsakes").add({
-      uid,
-      name,
-      cutoutUrl,
-      serialNumber,
-      rarity: "common",
-      createdAt,
-    });
-
-    return { _id: docRef.id, name, cutoutUrl, serialNumber, createdAt };
   }
 );
 

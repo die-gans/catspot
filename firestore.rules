@@ -2,18 +2,6 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Scans: owner-only read/write. Every scan document stores the Firebase Auth uid.
-    match /scans/{scanId} {
-      allow create: if request.auth != null
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.keys().hasAll(['uid', 'status', 'createdAt']);
-      allow read: if request.auth != null
-                   && resource.data.uid == request.auth.uid;
-      allow update: if request.auth != null
-                    && resource.data.uid == request.auth.uid;
-      allow delete: if false;
-    }
-
     // Keepsakes: function-written only; client may read their own for direct
     // Firestore collection queries.
     match /keepsakes/{id} {
@@ -37,7 +25,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Deny everything else by default while the migration is in progress.
+    // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;
     }
