@@ -2,6 +2,8 @@
 
 Date: 2026-07-30
 
+> ⚠️ **HISTORICAL DOCUMENT — SUPERSEDED 2026-08-05.** Convex was torn out in favour of Firebase (see `docs/planning/07-convex-to-firebase-migration.md` and PRD §0 Amendment Log). `convex_flutter` is no longer in the app. Kept for decision-history context only.
+
 ## Evaluated options
 
 | Package | Resolves with Flutter 3.44.8? | Notes |
