@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Convex backend for Catspot: auth, scan pipeline, vision, and economy functions.",
+  "description": "Firebase backend for Catspot: Cloud Functions (catch flow, naming, users), Firestore rules/indexes, R2 storage wiring.",
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "lint": "eslint convex/"
+    "build": "pnpm --dir functions build",
+    "typecheck": "pnpm --dir functions typecheck",
+    "deploy": "firebase deploy --project catspot-9ee0d"
   },
   "engines": {
     "node": ">=22.0"
@@ -15,12 +15,5 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.8.0"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.0.0",
-    "@aws-sdk/s3-request-presigner": "^3.0.0",
-    "convex": "^1.42.0",
-    "openai": "^7.0.0",
-    "replicate": "^1.0.0"
   }
 }
