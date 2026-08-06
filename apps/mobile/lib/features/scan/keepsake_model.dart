@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 class Keepsake {
   const Keepsake({
     required this.id,
-    required this.name,
+    this.name,
     required this.cutoutUrl,
     required this.serialNumber,
     required this.createdAt,
@@ -16,11 +16,11 @@ class Keepsake {
   ///
   /// Accepts `id` or `_id`, `cutoutUrl` or `imageUrl`, and `createdAt` as an
   /// epoch millis integer, a Firestore [Timestamp], a [DateTime], or an
-  /// ISO-8601 string.
+  /// ISO-8601 string. `name` may be null while the server trigger backfills it.
   factory Keepsake.fromJson(Map<String, dynamic> json) {
     return Keepsake(
       id: (json['id'] ?? json['_id']) as String,
-      name: json['name'] as String,
+      name: json['name'] as String?,
       cutoutUrl: (json['cutoutUrl'] ?? json['imageUrl']) as String,
       serialNumber: json['serialNumber'] as String,
       createdAt: _parseCreatedAt(json['createdAt']),
@@ -36,7 +36,7 @@ class Keepsake {
   }
 
   final String id;
-  final String name;
+  final String? name;
   final String cutoutUrl;
   final String serialNumber;
   final DateTime createdAt;
