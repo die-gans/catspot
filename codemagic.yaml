@@ -112,14 +112,17 @@ workflows:
       cocoapods: default
       vars:
         PATH: "$HOME/.cargo/bin:$PATH"
+        # Discord #catspot build-notification webhook (codemagic-builds bot).
+        # NOT a credential — worst case is someone spams the channel. Stored
+        # inline because app-level variable groups break team-group resolution
+        # (Codemagic validation failure 2026-08-06).
+        WEBHOOK_URL: https://discord.com/api/webhooks/1534782165735178402/ug1T0XiOUlw-u7EwX_jTv6IvsTYxglDdKZ8eXxsctMkxI7SK4mZTY1ArocJG0rKKX6iQ
       groups:
         # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
         # APP_STORE_CONNECT_PRIVATE_KEY
         - app_store_connect
         # CERTIFICATE_PRIVATE_KEY
         - certificate_credentials
-        # WEBHOOK_URL (Discord #catspot build notifications)
-        - discord_credentials
       ios_signing:
         distribution_type: app_store
         bundle_identifier: app.catspot.mobile
