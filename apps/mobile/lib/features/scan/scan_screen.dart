@@ -22,7 +22,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(scanControllerProvider.notifier).initialize();
+      final controller = ref.read(scanControllerProvider.notifier);
+      // Always start a fresh session when the route is entered. This clears
+      // any leftover captured/isolated/keepsake state even if the provider was
+      // still alive from a previous visit.
+      controller.retake();
+      controller.initialize();
     });
   }
 
