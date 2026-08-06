@@ -12,7 +12,10 @@ final keepsakeServiceProvider = Provider<KeepsakeService>(
   (ref) => KeepsakeService(),
 );
 
-final scanControllerProvider = StateNotifierProvider<ScanController, ScanState>(
+/// Auto-disposed when the scan route is left so a stale capture/isolated
+/// image or keepsake cannot leak into the next session. Re-entering the route
+/// creates a fresh controller with a clean [ScanState].
+final scanControllerProvider = StateNotifierProvider.autoDispose<ScanController, ScanState>(
   (ref) => ScanController(
     detectionService: ref.watch(catDetectionServiceProvider),
     keepsakeService: ref.watch(keepsakeServiceProvider),
