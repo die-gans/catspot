@@ -118,6 +118,8 @@ workflows:
         - app_store_connect
         # CERTIFICATE_PRIVATE_KEY
         - certificate_credentials
+        # WEBHOOK_URL (Discord #catspot build notifications)
+        - discord_credentials
       ios_signing:
         distribution_type: app_store
         bundle_identifier: app.catspot.mobile
@@ -169,3 +171,20 @@ workflows:
         auth: integration
         # Automatically submit the uploaded build to TestFlight beta review.
         submit_to_testflight: true
+      # Discord notifications to #catspot (codemagic-builds webhook).
+      # Publishing scripts run regardless of build outcome; branch on result.
+      scripts:
+        - name: Discord notification
+          script: |
+            COMMIT=$(echo "${CM_COMMIT}" | cut -c1-7)
+            COMMIT_MESSAGE=$(git log --format=%B -n 1 $CM_COMMIT | head -1)
+            if [ "${CM_BUILD_RESULT:-success}" = "success" ]; then
+              MSG="✅ **iOS TestFlight build succeeded**"
+              TAIL="IPA uploading to App Store Connect → TestFlight (~10-30 min processing)."
+            else
+              MSG="❌ **iOS TestFlight build FAILED** ($CM_BUILD_RESULT)"
+              TAIL="Check the logs."
+            fi
+            curl -s -H "Content-Type: application/json" \
+              -d "{\"username\": \"codemagic-builds\", \"content\": \"$MSG\\n**Commit:** \`$COMMIT\` — $COMMIT_MESSAGE\\n**Branch:** $CM_BRANCH\\n**Build:** https://codemagic.io/app/$CM_APP_ID/build/$CM_BUILD_ID\\n$TAIL\"}" \
+              $WEBHOOK_URL
