@@ -217,9 +217,10 @@ class _CatchResult extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  keepsake.name,
+                  keepsake.name ?? 'Naming your cat…',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontStyle: keepsake.name == null ? FontStyle.italic : null,
                       ),
                 ),
                 const SizedBox(height: 4),

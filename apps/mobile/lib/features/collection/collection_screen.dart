@@ -99,9 +99,10 @@ class _KeepsakeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  keepsake.name,
+                  keepsake.name ?? 'Unnamed cat',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontStyle: keepsake.name == null ? FontStyle.italic : null,
                       ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

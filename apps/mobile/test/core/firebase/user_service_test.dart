@@ -37,13 +37,16 @@ void main() {
 
       final data = UserDocumentData.fromFirebaseUser(user);
 
+      final after = DateTime.now().toUtc().add(const Duration(seconds: 1));
+
       expect(data.uid, 'user-123');
       expect(data.email, 'test@example.com');
       expect(data.displayName, 'Test User');
       expect(data.photoURL, 'https://example.com/photo.png');
       expect(data.xp, 0);
       expect(data.coins, 0);
-      expect(data.createdAt.isBefore(now.add(const Duration(seconds: 1))), isTrue);
+      expect(data.createdAt.isAfter(now.subtract(const Duration(seconds: 1))), isTrue);
+      expect(data.createdAt.isBefore(after), isTrue);
     });
 
     test('serializes to a Firestore-compatible map', () {
