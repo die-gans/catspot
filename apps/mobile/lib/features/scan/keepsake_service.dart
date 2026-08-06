@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -13,42 +16,26 @@ class KeepsakeService {
         _http = httpClient ?? http.Client();
 
   final FirebaseFunctions _firebase;
+
+  // Retained as an injectable seam even though the single-call fast path no
+  // longer uploads directly to R2. Keeping it avoids breaking existing tests
+  // and allows future flows to swap back in.
+  // ignore: unused_field
   final http.Client _http;
 
   static const _galleryChannel = MethodChannel('catspot/gallery');
 
   Future<Keepsake> saveAndCreate(Uint8List png) async {
-    // 1. Get presigned upload URL.
-    final uploadCallable = _firebase.httpsCallable('requestCutoutUpload');
-    final uploadResult =
-        await uploadCallable.call<Map<Object?, Object?>>(null);
-    final uploadData = _asMap(uploadResult.data);
-    final uploadUrl = uploadData['uploadUrl'] as String;
-    final r2Key = uploadData['r2Key'] as String;
+    // Single-call fast path: upload + create record in one Cloud Function.
+    final callable = _firebase.httpsCallable('catchKeepsake');
+    final result = await callable.call<Map<Object?, Object?>>({
+      'pngBase64': base64Encode(png),
+    });
+    final data = _asMap(result.data);
+    final keepsake = Keepsake.fromJson(data);
 
-    // 2. PUT the PNG directly to R2.
-    final putResponse = await _http.put(
-      Uri.parse(uploadUrl),
-      headers: {'Content-Type': 'image/png'},
-      body: png,
-    );
-    if (putResponse.statusCode != 200) {
-      throw Exception('R2 upload failed: ${putResponse.statusCode}');
-    }
-
-    // 3. Create keepsake record (Gemini naming server-side).
-    final createCallable = _firebase.httpsCallable('createKeepsake');
-    final createResult =
-        await createCallable.call<Map<Object?, Object?>>({'r2Key': r2Key});
-    final createData = _asMap(createResult.data);
-    final keepsake = Keepsake.fromJson(createData);
-
-    // 4. Save PNG to device Photos library (best-effort).
-    try {
-      await _galleryChannel.invokeMethod<bool>('saveImage', png);
-    } on PlatformException {
-      // Ignored — don't fail the flow if Photos is denied.
-    }
+    // Save PNG to device Photos library (best-effort) — don't block the result.
+    unawaited(_saveToGallery(png));
 
     return keepsake;
   }
@@ -61,6 +48,14 @@ class KeepsakeService {
         .cast<Map<Object?, Object?>>()
         .map((m) => Keepsake.fromJson(_asMap(m)))
         .toList(growable: false);
+  }
+
+  Future<void> _saveToGallery(Uint8List png) async {
+    try {
+      await _galleryChannel.invokeMethod<bool>('saveImage', png);
+    } on Exception {
+      // Ignored — don't fail the flow if Photos is denied or unavailable.
+    }
   }
 
   static Map<String, dynamic> _asMap(Object? value) {

@@ -67,5 +67,23 @@ void main() {
 
       expect(keepsakes.single.cutoutUrl, 'https://example.com/fallback.png');
     });
+
+    test('maps a null name while waiting for server backfill', () {
+      final keepsakes = KeepsakeStreamMapper.fromDocs([
+        (
+          id: 'doc-4',
+          data: {
+            'name': null,
+            'cutoutUrl': 'https://example.com/unnamed.png',
+            'serialNumber': 'CS-1003',
+            'createdAt': 1754404800000,
+            'uid': 'user-123',
+          },
+        ),
+      ]);
+
+      expect(keepsakes.single.name, isNull);
+      expect(keepsakes.single.cutoutUrl, 'https://example.com/unnamed.png');
+    });
   });
 }

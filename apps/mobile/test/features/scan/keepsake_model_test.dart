@@ -78,6 +78,18 @@ void main() {
       expect(keepsake.createdAt.isAfter(before) || keepsake.createdAt == before, isTrue);
       expect(keepsake.createdAt.isBefore(after) || keepsake.createdAt == after, isTrue);
     });
+
+    test('tolerates a null name from the server placeholder', () {
+      final keepsake = Keepsake.fromJson(const {
+        'id': 'placeholder-id',
+        'name': null,
+        'cutoutUrl': 'https://example.com/placeholder.png',
+        'serialNumber': 'CS-0008',
+        'createdAt': 0,
+      });
+
+      expect(keepsake.name, isNull);
+    });
   });
 
   group('Keepsake.fromFirestore', () {
@@ -101,6 +113,23 @@ void main() {
       expect(keepsake.createdAt.millisecondsSinceEpoch,
           createdAt.millisecondsSinceEpoch);
     });
+
+    test('maps a null name while waiting for the backfill trigger', () {
+      final createdAt = DateTime.utc(2026, 8, 5, 12, 0);
+      final keepsake = Keepsake.fromFirestore(
+        'firestore-doc-id',
+        {
+          'name': null,
+          'cutoutUrl': 'https://example.com/new.png',
+          'serialNumber': 'CS-0009',
+          'createdAt': Timestamp.fromDate(createdAt),
+          'uid': 'user-123',
+        },
+      );
+
+      expect(keepsake.name, isNull);
+      expect(keepsake.cutoutUrl, 'https://example.com/new.png');
+    });
   });
 
   group('Keepsake.toJson', () {
@@ -120,6 +149,19 @@ void main() {
       expect(json['cutoutUrl'], 'https://example.com/simba.png');
       expect(json['serialNumber'], 'CS-0007');
       expect(json['createdAt'], createdAt.millisecondsSinceEpoch);
+    });
+
+    test('serializes a null name', () {
+      final keepsake = Keepsake(
+        id: 'null-name-id',
+        name: null,
+        cutoutUrl: 'https://example.com/noname.png',
+        serialNumber: 'CS-0010',
+        createdAt: DateTime.utc(2026, 8, 5, 12, 0),
+      );
+
+      final json = keepsake.toJson();
+      expect(json['name'], isNull);
     });
   });
 }
