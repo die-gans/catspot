@@ -19,6 +19,19 @@ CatchCat is a real-world cat-spotting collection game — "Pokémon GO for cats.
 
 ---
 
+## 0. Amendment Log (post-publication decisions — these override the original text)
+
+| Date | Decision | Original spec | Why |
+|---|---|---|---|
+| 2026-07-30 | Auth = **Firebase Auth**, not Clerk | §5.1 Clerk | One less vendor, native FlutterFire. |
+| 2026-08-05 | Backend = **Firebase** (Functions + Firestore), Convex torn out | §5.1/§5.2/§5.3 Convex | Community Flutter SDK friction; managed Firebase is simpler. |
+| 2026-08 | Detection/cutout = **Apple Vision** on-device, not MLKit/TFLite + Replicate | §5.1, §5.4 | Free, instant, offline; iOS-first. Android port will need an MLKit path. |
+| 2026-08-06 | **Server vision verification + embeddings descoped for MVP** | §5.4, F1 | Nothing to cheat for pre-social; on-device gates the catch. Returns at G3 (map/leaderboards/dupe-merge). Manual fallback = provisional keepsake, unverified. |
+| 2026-08-06 | **iOS-first**; F8 Android parity deferred until after iOS beta validation | §6.5 F8 | Velocity; CatchCat's open flank is iOS anyway. |
+| 2026-08-06 | Anti-cheat (§5.4.3) deferred to G3 with server verification | §5.4 | Same rationale. |
+
+---
+
 ## 1. What CatchCat Is
 
 ### 1.1 Core Loop
@@ -162,17 +175,17 @@ CatchCat's model is **ads + IAP + subscription + hinted Web3**. The problem is t
 | Layer | Choice | Why |
 |---|---|---|
 | Mobile framework | **Flutter stable (Dart 3)** | Single iOS+Android+web codebase from one language; fast native performance; strong widget test/debug velocity; web build lets us design and test in the browser without shipping web. |
-| State management | **Riverpod** (UI) + **Convex** (server) | Simple UI state; real-time backend state stays authoritative. |
+| State management | **Riverpod** (UI) + **Firestore streams** (server) | Simple UI state; server state stays authoritative via live queries. |
 | Navigation | **go_router** | Deep-linking, web smoke routing, declarative URL structure. |
 | Camera | **Flutter `camera` plugin** (native) + manual capture on web | Live image streams on native; web preview/capture only. Lens/zoom/focus supported where hardware allows. |
-| On-device ML | **Google MLKit object detection** (MVP) → custom **TFLite via `tflite_flutter`** | MLKit ships day one; custom model fine-tuned on cats closes the accuracy gap. |
-| Backend | **Convex** | Real-time sync, TypeScript end-to-end, scheduled jobs, scales from 0. Strong for social/map features. |
-| Convex client (Flutter) | **`convex_flutter` / `convex_dart`** (community; validated in Sprint 1) or thin wrapper over Convex HTTP endpoints | No official SDK; validated first, swapped if needed. |
-| Auth | **Clerk** via `clerk_flutter` (beta) + Convex JWT template | Google/Apple/email-code out of the box; JWT token bridge to Convex. |
+| On-device ML | **Apple Vision** (`VNRecognizeAnimalsRequest` + subject isolation) on iOS | Ships day one, free, on-device; does detection AND cutout. Android will need MLKit equivalent when we port (F8 parity is deferred — see iOS-first amendment below). |
+| Backend | **Firebase** (Functions v2 nodejs22 us-central1 + Firestore) — *amended 2026-08-05, was Convex* | Managed, zero-maintenance, Dan knows it; Convex torn out after client SDK friction. |
+| Auth | **Firebase Auth** (Google/Apple/email) — *amended 2026-07-30, was Clerk* | One less vendor; native FlutterFire integration. |
 | Image storage | **Cloudflare R2** + CDN | Zero egress fees, cheap at image-heavy scale. |
-| Image processing | **Replicate** (silhouette/rembg) + **Cloudflare Workers** (thumbnails) | On-demand GPU without managing infra. |
-| Server vision | **OpenAI GPT-4.1-mini / GPT-4o-mini vision** | Cheap verification of "real cat vs. screen/print/plush." |
-| Embeddings | **OpenCLIP/MobileCLIP pet-fine-tuned** | 512-d vectors for duplicate detection of the same physical cat. |
+| Image processing | **On-device Apple Vision subject isolation** — *amended 2026-08, was Replicate* | Free, instant, no GPU dependency, works offline. |
+| Server vision | **DESCOPED for MVP (2026-08-06)** — was OpenAI/Gemini vision-LLM verification | On-device detection gates the catch; nothing to cheat for pre-social. Returns at G3 (map/leaderboards/dupe-merge) if needed. |
+| Embeddings | **DESCOPED for MVP** (was OpenCLIP 512-d dupe detection) | Same rationale as server vision. |
+| AI naming | **Gemini (3.1-flash-lite)** — async, out of the critical path | Generates keepsake names in a Firestore trigger; failure-tolerant, never blocks a catch. |
 | IAP/ads | **RevenueCat** (`purchases_flutter`) + **AdMob** (`google_mobile_ads`) | Industry standard; handles receipt validation and SSV ad rewards. |
 | Push | **Firebase Cloud Messaging** + **flutter_local_notifications** (Phase 3+) | Segmentation for rare-find alerts, streak reminders. |
 | Analytics | **PostHog** + **Sentry** | Privacy-friendly, generous free tiers. |
@@ -352,11 +365,11 @@ A real-world cat-spotting collection game rebuilt around three commitments Catch
 
 ### 6.5 MVP Feature List (v0.1) with Acceptance Criteria
 
-#### F1 — On-device + server detection with manual fallback
-- Detect a cat in frame at up to ~5m in normal indoor lighting, ≥90% recall on a 200-image test set.
+#### F1 — On-device detection with manual fallback *(amended 2026-08-06: server verification descoped for MVP)*
+- Detect a cat in frame at up to ~5m in normal indoor lighting, ≥85% recall on a 200-image test set (G1 gate).
 - Detection feedback ≤500ms on mid-range device.
-- If no detection after 5s, show "Capture anyway" button; manual captures queued for server verification (≤60s).
-- Reject photos-of-screens with ≥95% precision.
+- If no detection after 5s, show "Capture anyway" button; manual captures become **provisional keepsakes** (no server verification in MVP — nothing to cheat for pre-social; verification returns at G3 if map/leaderboards ship).
+- ~~Reject photos-of-screens with ≥95% precision~~ → **deferred to G3** (was a server-verification criterion).
 
 #### F2 — Camera experience
 - Lens selector (ultrawide/1x/tele where hardware allows), pinch zoom, tap-to-focus/exposure lock.
