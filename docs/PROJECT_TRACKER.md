@@ -109,8 +109,10 @@ flutter run -d 00008140-001C74A01A06801C --dart-define=CONVEX_URL=https://amiabl
 
 ## 📋 Planned (Next 90 Days)
 
-- [ ] Sprint 1 (Wk 1–2): monorepo scaffold, CI, Codemagic dev builds, schema v1, R2 upload
-- [ ] Sprint 2 (Wk 3–4): detection/AI spike — server verification, embeddings, cutouts → GO/NO-GO gate G1
+- [ ] Sprint 1 (Wk 1–2): monorepo scaffold, CI, Codemagic dev builds, schema v1, R2 upload ✅
+- [x] Sprint 1 wrap review (2026-08-06): scan→catch→save flow mapped (4 serial network hops, Gemini naming in critical path); environments plan written (`docs/planning/08-environments.md`, plan-only, 2-env recommendation); design system/branding ticket for Dan → GitHub issue #26
+- [x] **Catch-flow optimization SHIPPED 2026-08-06 (PRs #27 BE + #28 MOB):** 3-hop save → single `catchKeepsake({pngBase64})` callable (PNG inline → R2 → Firestore, returns immediately, `name: null` placeholder). Gemini naming moved to `nameKeepsake` Firestore onCreate trigger (async backfill, failure-tolerant). Mobile: Photos save unawaited, nullable name, "Naming your cat…" placeholder, 36/36 tests pass. `requestCutoutUpload`/`createKeepsake` deprecated as shims. All functions deployed live (us-central1) incl. trigger (Eventarc propagation delay needed one retry). Gotcha: parallel workers sharing one repo — mobile worker committed onto the be/ branch; fixed via reset + cherry-pick. Future parallel cards: workers must verify `git branch --show-current` before committing.
+- [ ] Sprint 2 (Wk 3–4): catch-flow perf optimization ✅ — TestFlight build 6a740714601e30b03d6dddc4 in progress for field validation → then dev/prod environment split (plan 08) + G1 field test
 - [ ] Sprints 3–8: core scan loop, collection management, economy/social, map, launch readiness
 - [ ] Gates G2 (beta), G3 (economy/anti-cheat), G4 (ship)
 
